@@ -1,186 +1,12 @@
 use std::borrow::{Borrow, Cow};
-use std::ffi::OsString;
-use std::mem::MaybeUninit;
-use std::str::FromStr;
 use std::time::Duration;
 
-use strum_macros::{EnumString, IntoStaticStr};
-use windows as Windows;
 use xml::writer::XmlEvent;
 use xml::{EmitterConfig, EventWriter};
-use Windows::Win32::Media::Speech::{ISpVoice, SpVoice, SPF_DEFAULT, SPF_IS_XML, SPF_PARSE_SAPI};
-use Windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
+use windows as Windows;
+use Windows::Win32::Media::Speech::{SPF_DEFAULT, SPF_IS_XML, SPF_PARSE_SAPI};
 
-use crate::token::{Category, Token};
-use crate::Result;
-
-pub struct Synthesizer {
-    intf: ISpVoice,
-}
-
-impl Synthesizer {
-    pub fn new() -> Result<Self> {
-        unsafe { CoCreateInstance(&SpVoice, None, CLSCTX_ALL) }.map(|intf| Self {
-            intf,
-        })
-    }
-
-    pub fn rate(&self) -> Result<i32> {
-        let mut rate = MaybeUninit::uninit();
-        unsafe { self.intf.GetRate(rate.as_mut_ptr()) }?;
-        Ok(unsafe { rate.assume_init() })
-    }
-
-    pub fn voice(&self) -> Result<Voice> {
-        unsafe { self.intf.GetVoice() }.map(|intf| Voice {
-            token: Token {
-                intf,
-            },
-        })
-    }
-
-    pub fn volume(&self) -> Result<i32> {
-        let mut volume = MaybeUninit::<u16>::uninit();
-        unsafe { self.intf.GetVolume(volume.as_mut_ptr()) }?;
-        Ok(unsafe { volume.assume_init().into() })
-    }
-
-    pub fn set_rate(&self, rate: i32) -> Result<()> {
-        unsafe { self.intf.SetRate(rate.clamp(-10, 10)) }
-    }
-
-    pub fn set_voice(&self, voice: Voice) -> Result<()> {
-        unsafe { self.intf.SetVoice(voice.token.intf) }
-    }
-
-    pub fn set_volume(&self, volume: i32) -> Result<()> {
-        unsafe { self.intf.SetVolume(volume.clamp(0, 100) as _) }
-    }
-
-    pub fn speak<'s, S: Into<Speech<'s>>>(&self, speech: S) -> Result<()> {
-        let speech = speech.into();
-        unsafe { self.intf.Speak(speech.contents(), speech.flags()) }.map(|_| ())
-    }
-}
-
-#[derive(Debug, EnumString, IntoStaticStr)]
-#[strum(ascii_case_insensitive)]
-pub enum VoiceAge {
-    Adult,
-    Child,
-    Senior,
-    Teen,
-}
-
-#[derive(Debug, EnumString, IntoStaticStr)]
-#[strum(ascii_case_insensitive)]
-pub enum VoiceGender {
-    Female,
-    Male,
-    Neutral,
-}
-
-pub struct VoiceSelector {
-    sapi_expr: String,
-}
-
-impl VoiceSelector {
-    pub fn new() -> Self {
-        Self {
-            sapi_expr: String::new(),
-        }
-    }
-
-    pub fn name_eq<S: AsRef<str>>(self, name: S) -> Self {
-        self.append_condition("name=", name.as_ref())
-    }
-
-    pub fn name_ne<S: AsRef<str>>(self, name: S) -> Self {
-        self.append_condition("name!=", name.as_ref())
-    }
-
-    pub fn age_eq(self, age: VoiceAge) -> Self {
-        self.append_condition("age=", age.into())
-    }
-
-    pub fn age_ne(self, age: VoiceAge) -> Self {
-        self.append_condition("age!=", age.into())
-    }
-
-    pub fn gender_eq(self, gender: VoiceGender) -> Self {
-        self.append_condition("gender=", gender.into())
-    }
-
-    pub fn gender_ne(self, gender: VoiceGender) -> Self {
-        self.append_condition("gender!=", gender.into())
-    }
-
-    pub fn language_eq<S: AsRef<str>>(self, language: S) -> Self {
-        self.append_condition("language=", language.as_ref())
-    }
-
-    pub fn language_ne<S: AsRef<str>>(self, language: S) -> Self {
-        self.append_condition("language!=", language.as_ref())
-    }
-
-    fn append_condition(mut self, prefix: &str, val: &str) -> Self {
-        if !self.sapi_expr.is_empty() {
-            self.sapi_expr.push(';')
-        }
-        self.sapi_expr.push_str(prefix);
-        self.sapi_expr.push_str(val);
-        self
-    }
-
-    fn into_sapi_expr(self) -> String {
-        self.sapi_expr
-    }
-}
-
-pub struct Voice {
-    token: Token,
-}
-
-pub fn installed_voices(
-    required: VoiceSelector,
-    optional: Option<VoiceSelector>,
-) -> Result<impl Iterator<Item = Voice>> {
-    let category = Category::new(r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices")?;
-    let tokens = category
-        .enum_tokens(required.into_sapi_expr(), optional.map(VoiceSelector::into_sapi_expr))?;
-
-    Ok(tokens.map(|token| Voice {
-        token,
-    }))
-}
-
-impl Voice {
-    pub fn name(&self) -> Option<OsString> {
-        self.token.attr("name").ok()
-    }
-
-    pub fn age(&self) -> Option<VoiceAge> {
-        self.token
-            .attr("age")
-            .ok()
-            .as_ref()
-            .and_then(|s| s.to_str())
-            .and_then(|s| VoiceAge::from_str(s).ok())
-    }
-
-    pub fn gender(&self) -> Option<VoiceGender> {
-        self.token
-            .attr("gender")
-            .ok()
-            .as_ref()
-            .and_then(|s| s.to_str())
-            .and_then(|s| VoiceGender::from_str(s).ok())
-    }
-
-    pub fn language(&self) -> Option<OsString> {
-        self.token.attr("language").ok()
-    }
-}
+use super::voice::{VoiceSelector, Voice};
 
 pub enum Speech<'s> {
     Text(Cow<'s, str>),
@@ -188,14 +14,14 @@ pub enum Speech<'s> {
 }
 
 impl<'s> Speech<'s> {
-    fn flags(&self) -> u32 {
+    pub(crate) fn flags(&self) -> u32 {
         (match self {
             Self::Text(_) => SPF_DEFAULT.0,
             Self::Xml(_) => (SPF_IS_XML.0 | SPF_PARSE_SAPI.0),
         }) as u32
     }
 
-    fn contents(&self) -> &str {
+    pub(crate) fn contents(&self) -> &str {
         match self {
             Self::Text(cow) => cow.borrow(),
             Self::Xml(cow) => cow.borrow(),
