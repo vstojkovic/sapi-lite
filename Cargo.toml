@@ -1,0 +1,10 @@
+[package]
+name = "sapi-lite"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+strum = "0.23"
+strum_macros = "0.23"
+windows = { version = "0.28", features = ["alloc", "build", "Win32_Foundation", "Win32_Media_Speech", "Win32_System_Com", "Win32_System_Ole"] }
+xml-rs = "0.8.4"
