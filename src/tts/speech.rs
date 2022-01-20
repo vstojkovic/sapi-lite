@@ -1,4 +1,7 @@
 use std::borrow::{Borrow, Cow};
+use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
+use std::fmt::Display;
+use std::hash::Hash;
 use std::time::Duration;
 
 use xml::writer::XmlEvent;
@@ -81,6 +84,55 @@ impl<'s> SayAs<'s> {
     }
 }
 
+macro_rules! decl_clamped_int {
+    {$name:ident($base:ty) in $min:literal..$max:literal} => {
+        #[derive(Hash, PartialEq, Eq, PartialOrd, Ord)]
+        pub struct $name($base);
+
+        impl $name {
+            pub fn new(value: $base) -> Self {
+                Self(value.clamp($min, $max))
+            }
+
+            pub fn value(&self) -> $base {
+                self.0
+            }
+        }
+
+        impl From<$base> for $name {
+            fn from(source: $base) -> Self {
+                Self::new(source)
+            }
+        }
+
+        impl From<$name> for $base {
+            fn from(source: $name) -> Self {
+                source.0
+            }
+        }
+
+        impl Display for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{}", self.0)
+            }
+        }
+    };
+}
+
+decl_clamped_int! { Pitch(i32) in -10..10 }
+decl_clamped_int! { Rate(i32) in -10..10 }
+decl_clamped_int! { Volume(u32) in 0..100 }
+
+impl Volume {
+    pub(crate) fn from_sapi(source: u16) -> Self {
+        Self::new(source as _)
+    }
+
+    pub(crate) fn sapi_value(&self) -> u16 {
+        self.0 as _
+    }
+}
+
 pub enum SpeechBuilder {
     Text(String),
     Xml(EventWriter<Vec<u8>>),
@@ -95,18 +147,18 @@ impl SpeechBuilder {
         self.append_xml(XmlEvent::start_element("emph").into())
     }
 
-    pub fn start_pitch(self, pitch: i32) -> Self {
+    pub fn start_pitch<P: Into<Pitch>>(self, pitch: P) -> Self {
         self.append_xml(
             XmlEvent::start_element("pitch")
-                .attr("absmiddle", &pitch.clamp(-10, 10).to_string())
+                .attr("absmiddle", &pitch.into().to_string())
                 .into(),
         )
     }
 
-    pub fn start_rate(self, rate: i32) -> Self {
+    pub fn start_rate<R: Into<Rate>>(self, rate: R) -> Self {
         self.append_xml(
             XmlEvent::start_element("rate")
-                .attr("absspeed", &rate.clamp(-10, 10).to_string())
+                .attr("absspeed", &rate.into().to_string())
                 .into(),
         )
     }
@@ -141,10 +193,10 @@ impl SpeechBuilder {
         self.append_xml(event.into())
     }
 
-    pub fn start_volume(self, volume: i32) -> Self {
+    pub fn start_volume<V: Into<Volume>>(self, volume: V) -> Self {
         self.append_xml(
             XmlEvent::start_element("volume")
-                .attr("level", &volume.clamp(0, 100).to_string())
+                .attr("level", &volume.into().to_string())
                 .into(),
         )
     }
