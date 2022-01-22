@@ -1,3 +1,4 @@
+use std::mem::MaybeUninit;
 use std::{
     ffi::{c_void, OsString},
     ops::Deref,
@@ -7,10 +8,18 @@ use std::{
 use windows as Windows;
 use Windows::Win32::{Foundation::PWSTR, System::Com::CoTaskMemFree};
 
+use crate::Result;
+
 pub unsafe fn from_wide(s: &PWSTR) -> OsString {
     let len = (0..).take_while(|&i| *s.0.offset(i) != 0).count();
     let slice = std::slice::from_raw_parts(s.0, len);
     OsString::from_wide(slice)
+}
+
+pub unsafe fn out_to_ret<T, F: FnOnce(*mut T) -> Result<()>>(f: F) -> Result<T> {
+    let mut result = MaybeUninit::uninit();
+    f(result.as_mut_ptr())?;
+    Ok(result.assume_init())
 }
 
 pub unsafe trait ComBuffer {

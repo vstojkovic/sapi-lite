@@ -1,9 +1,8 @@
-use std::mem::MaybeUninit;
-
 use windows as Windows;
 use Windows::Win32::Media::Speech::{ISpVoice, SpVoice};
 use Windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
 
+use crate::com_util::out_to_ret;
 use crate::token::Token;
 use crate::Result;
 
@@ -25,9 +24,7 @@ impl Synthesizer {
     }
 
     pub fn rate(&self) -> Result<Rate> {
-        let mut rate = MaybeUninit::uninit();
-        unsafe { self.intf.GetRate(rate.as_mut_ptr()) }?;
-        Ok(unsafe { rate.assume_init() }.into())
+        unsafe { out_to_ret(|out| self.intf.GetRate(out)) }.map(Rate::new)
     }
 
     pub fn voice(&self) -> Result<Voice> {
@@ -39,9 +36,7 @@ impl Synthesizer {
     }
 
     pub fn volume(&self) -> Result<Volume> {
-        let mut volume = MaybeUninit::<u16>::uninit();
-        unsafe { self.intf.GetVolume(volume.as_mut_ptr()) }?;
-        Ok(Volume::from_sapi(unsafe { volume.assume_init() }))
+        unsafe { out_to_ret(|out| self.intf.GetVolume(out)) }.map(Volume::from_sapi)
     }
 
     pub fn set_rate<R: Into<Rate>>(&self, rate: R) -> Result<()> {
