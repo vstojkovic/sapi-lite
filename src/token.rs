@@ -32,8 +32,8 @@ impl Iterator for Tokens {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut intf = MaybeUninit::uninit();
-        unsafe { self.intf.Next(1, intf.as_mut_ptr(), null_mut()) }.unwrap();
+        let mut intf = MaybeUninit::zeroed();
+        unsafe { self.intf.Next(1, intf.as_mut_ptr(), null_mut()) }.ok()?;
         unsafe { intf.assume_init() }.map(|intf| Token {
             intf,
         })
