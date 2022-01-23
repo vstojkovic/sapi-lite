@@ -3,8 +3,8 @@ use std::str::FromStr;
 
 use strum_macros::{EnumString, IntoStaticStr};
 
+use crate::token::{Category, Token};
 use crate::Result;
-use crate::token::{Token, Category};
 
 #[derive(Debug, EnumString, IntoStaticStr)]
 #[strum(ascii_case_insensitive)]

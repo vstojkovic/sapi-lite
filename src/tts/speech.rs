@@ -4,12 +4,12 @@ use std::fmt::Display;
 use std::hash::Hash;
 use std::time::Duration;
 
+use windows as Windows;
 use xml::writer::XmlEvent;
 use xml::{EmitterConfig, EventWriter};
-use windows as Windows;
 use Windows::Win32::Media::Speech::{SPF_DEFAULT, SPF_IS_XML, SPF_PARSE_SAPI};
 
-use super::voice::{VoiceSelector, Voice};
+use super::voice::{Voice, VoiceSelector};
 
 pub enum Speech<'s> {
     Text(Cow<'s, str>),
@@ -149,17 +149,13 @@ impl SpeechBuilder {
 
     pub fn start_pitch<P: Into<Pitch>>(self, pitch: P) -> Self {
         self.append_xml(
-            XmlEvent::start_element("pitch")
-                .attr("absmiddle", &pitch.into().to_string())
-                .into(),
+            XmlEvent::start_element("pitch").attr("absmiddle", &pitch.into().to_string()).into(),
         )
     }
 
     pub fn start_rate<R: Into<Rate>>(self, rate: R) -> Self {
         self.append_xml(
-            XmlEvent::start_element("rate")
-                .attr("absspeed", &rate.into().to_string())
-                .into(),
+            XmlEvent::start_element("rate").attr("absspeed", &rate.into().to_string()).into(),
         )
     }
 
@@ -195,9 +191,7 @@ impl SpeechBuilder {
 
     pub fn start_volume<V: Into<Volume>>(self, volume: V) -> Self {
         self.append_xml(
-            XmlEvent::start_element("volume")
-                .attr("level", &volume.into().to_string())
-                .into(),
+            XmlEvent::start_element("volume").attr("level", &volume.into().to_string()).into(),
         )
     }
 
