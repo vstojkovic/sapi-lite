@@ -3,13 +3,12 @@ use std::mem::MaybeUninit;
 use std::ptr::null_mut;
 
 use windows as Windows;
-use Windows::Win32::Foundation::PWSTR;
 use Windows::Win32::Media::Speech::{
     IEnumSpObjectTokens, ISpObjectToken, ISpObjectTokenCategory, SpObjectTokenCategory,
 };
 use Windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
 
-use crate::com_util::{from_wide, ComBox};
+use crate::com_util::{from_wide, opt_str_param, ComBox};
 use crate::Result;
 
 pub(crate) struct Token {
@@ -55,14 +54,10 @@ impl Category {
     }
 
     pub fn enum_tokens<S: AsRef<str>>(&self, req_attrs: S, opt_attrs: Option<S>) -> Result<Tokens> {
-        use Windows::core::{IntoParam, Param};
-
-        let opt_param: Param<PWSTR> = match opt_attrs {
-            Some(attrs) => attrs.as_ref().into_param(),
-            None => Param::None,
-        };
-        unsafe { self.intf.EnumTokens(req_attrs.as_ref(), opt_param.abi()) }.map(|intf| Tokens {
-            intf,
-        })
+        unsafe { self.intf.EnumTokens(req_attrs.as_ref(), opt_str_param(opt_attrs).abi()) }.map(
+            |intf| Tokens {
+                intf,
+            },
+        )
     }
 }
