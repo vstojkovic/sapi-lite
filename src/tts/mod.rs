@@ -6,11 +6,11 @@ use crate::com_util::out_to_ret;
 use crate::token::Token;
 use crate::Result;
 
-pub use self::speech::{Pitch, Rate, SayAs, Speech, SpeechBuilder, Volume};
-pub use self::voice::{installed_voices, Voice, VoiceAge, VoiceGender, VoiceSelector};
-
 mod speech;
 mod voice;
+
+pub use self::speech::{Pitch, Rate, SayAs, Speech, SpeechBuilder, Volume};
+pub use self::voice::{installed_voices, Voice, VoiceAge, VoiceGender, VoiceSelector};
 
 pub struct Synthesizer {
     intf: ISpVoice,
