@@ -1,14 +1,15 @@
 use std::ffi::OsString;
-use std::mem::MaybeUninit;
-use std::ptr::null_mut;
 
 use windows as Windows;
+use Windows::core::IntoParam;
+use Windows::Win32::Foundation::PWSTR;
 use Windows::Win32::Media::Speech::{
-    IEnumSpObjectTokens, ISpObjectToken, ISpObjectTokenCategory, SpObjectTokenCategory,
+    IEnumSpObjectTokens, ISpObjectToken, ISpObjectTokenCategory, SpObjectToken,
+    SpObjectTokenCategory,
 };
 use Windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
 
-use crate::com_util::{from_wide, opt_str_param, ComBox};
+use crate::com_util::{from_wide, next_obj, opt_str_param, ComBox};
 use crate::Result;
 
 pub(crate) struct Token {
@@ -16,6 +17,14 @@ pub(crate) struct Token {
 }
 
 impl Token {
+    pub fn new<'s, S: IntoParam<'s, PWSTR>>(id: S) -> Result<Self> {
+        let intf: ISpObjectToken = unsafe { CoCreateInstance(&SpObjectToken, None, CLSCTX_ALL) }?;
+        unsafe { intf.SetId(None, id, false) }?;
+        Ok(Token {
+            intf,
+        })
+    }
+
     pub fn attr(&self, name: &str) -> Result<OsString> {
         let attrs = unsafe { self.intf.OpenKey("Attributes") }?;
         let value = unsafe { ComBox::from_raw(attrs.GetStringValue(name)?) };
@@ -31,9 +40,7 @@ impl Iterator for Tokens {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut intf = MaybeUninit::zeroed();
-        unsafe { self.intf.Next(1, intf.as_mut_ptr(), null_mut()) }.ok()?;
-        unsafe { intf.assume_init() }.map(|intf| Token {
+        unsafe { next_obj(&self.intf, IEnumSpObjectTokens::Next) }.ok()?.map(|intf| Token {
             intf,
         })
     }
@@ -59,5 +66,9 @@ impl Category {
                 intf,
             },
         )
+    }
+
+    pub fn default_token(&self) -> Result<Token> {
+        unsafe { self.intf.GetDefaultTokenId() }.and_then(Token::new)
     }
 }

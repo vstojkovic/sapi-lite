@@ -6,7 +6,7 @@ use std::{
 };
 
 use windows as Windows;
-use Windows::core::{IntoParam, Param};
+use Windows::core::{Interface, IntoParam, Param};
 use Windows::Win32::Foundation::PWSTR;
 use Windows::Win32::System::Com::CoTaskMemFree;
 
@@ -29,6 +29,34 @@ pub unsafe fn out_to_ret<T, F: FnOnce(*mut T) -> Result<()>>(f: F) -> Result<T> 
     let mut result = MaybeUninit::uninit();
     f(result.as_mut_ptr())?;
     Ok(result.assume_init())
+}
+
+pub unsafe fn next_elem<I, R>(
+    intf: &I,
+    f: unsafe fn(&I, u32, *mut R, *mut u32) -> Result<()>,
+) -> Result<Option<R>> {
+    let mut result = MaybeUninit::uninit();
+    let mut fetched = MaybeUninit::uninit();
+    f(intf, 1, result.as_mut_ptr(), fetched.as_mut_ptr())?;
+    Ok(if fetched.assume_init() > 0 {
+        Some(result.assume_init())
+    } else {
+        None
+    })
+}
+
+pub unsafe fn next_obj<I, R: Interface>(
+    intf: &I,
+    f: unsafe fn(&I, u32, *mut Option<R>, *mut u32) -> Result<()>,
+) -> Result<Option<R>> {
+    let mut result = MaybeUninit::uninit();
+    let mut fetched = MaybeUninit::uninit();
+    f(intf, 1, result.as_mut_ptr(), fetched.as_mut_ptr())?;
+    Ok(if fetched.assume_init() > 0 {
+        result.assume_init()
+    } else {
+        None
+    })
 }
 
 pub unsafe trait ComBuffer {
