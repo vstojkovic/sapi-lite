@@ -3,6 +3,8 @@ use std::ptr::null;
 use windows::Win32::System::Com::{CoInitialize, CoUninitialize};
 
 mod com_util;
+mod event;
+pub mod stt;
 mod token;
 pub mod tts;
 
