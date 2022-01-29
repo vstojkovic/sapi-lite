@@ -13,6 +13,9 @@ use Windows::Win32::Media::Speech::{
 use crate::com_util::{opt_str_param, out_to_ret};
 use crate::Result;
 
+use super::semantics::SemanticProperty;
+use super::SemanticValue;
+
 pub struct Grammar {
     intf: ISpRecoGrammar,
 }
@@ -41,6 +44,7 @@ pub enum Rule<'a> {
     Choice(Cow<'a, [&'a Rule<'a>]>),
     Sequence(Cow<'a, [&'a Rule<'a>]>),
     Repeat(Range<u32>, &'a Rule<'a>),
+    Semantic(SemanticValue<Cow<'a, str>>, &'a Rule<'a>),
 }
 
 pub struct GrammarBuilder<'a> {
@@ -147,6 +151,7 @@ impl<'a, 'b> RecursiveRuleBuilder<'a, 'b> {
             Rule::Choice(options) => self.build_choice(init_state, options)?,
             Rule::Sequence(parts) => self.build_sequence(init_state, parts)?,
             Rule::Repeat(times, target) => self.build_repeat(init_state, times, target)?,
+            Rule::Semantic(sem_val, target) => self.build_semantic(init_state, sem_val, target)?,
         }
 
         Ok(init_state)
@@ -159,7 +164,7 @@ impl<'a, 'b> RecursiveRuleBuilder<'a, 'b> {
     fn build_choice(&mut self, init_state: State, options: &Cow<'a, [&Rule<'a>]>) -> Result<()> {
         for option in options.iter() {
             let child_state = self.build_rule(option)?;
-            self.rule_arc(init_state, null_mut(), child_state)?;
+            self.rule_arc(init_state, null_mut(), child_state, None)?;
         }
         Ok(())
     }
@@ -174,7 +179,7 @@ impl<'a, 'b> RecursiveRuleBuilder<'a, 'b> {
             } else {
                 null_mut()
             };
-            self.rule_arc(prev_state, next_state, child_state)?;
+            self.rule_arc(prev_state, next_state, child_state, None)?;
             prev_state = next_state;
         }
         Ok(())
@@ -197,7 +202,7 @@ impl<'a, 'b> RecursiveRuleBuilder<'a, 'b> {
             } else {
                 null_mut()
             };
-            self.rule_arc(prev_state, next_state, child_state)?;
+            self.rule_arc(prev_state, next_state, child_state, None)?;
             if required_left > 0 {
                 required_left -= 1;
             } else {
@@ -206,6 +211,17 @@ impl<'a, 'b> RecursiveRuleBuilder<'a, 'b> {
             prev_state = next_state;
         }
         Ok(())
+    }
+
+    fn build_semantic(
+        &mut self,
+        init_state: State,
+        sem_val: &SemanticValue<Cow<'a, str>>,
+        target: &'a Rule<'a>,
+    ) -> Result<()> {
+        let child_state = self.build_rule(target)?;
+        let property = SemanticProperty::new(sem_val);
+        self.rule_arc(init_state, null_mut(), child_state, Some(&property))
     }
 
     fn create_state(&mut self, from_state: State) -> Result<State> {
@@ -218,8 +234,18 @@ impl<'a, 'b> RecursiveRuleBuilder<'a, 'b> {
         }
     }
 
-    fn rule_arc(&mut self, from_state: State, to_state: State, child_state: State) -> Result<()> {
-        unsafe { self.intf.AddRuleTransition(from_state, to_state, child_state, 1.0, null()) }
+    fn rule_arc(
+        &mut self,
+        from_state: State,
+        to_state: State,
+        child_state: State,
+        property: Option<&SemanticProperty>,
+    ) -> Result<()> {
+        let prop_ptr = match property {
+            Some(prop) => &prop.info,
+            None => null(),
+        };
+        unsafe { self.intf.AddRuleTransition(from_state, to_state, child_state, 1.0, prop_ptr) }
     }
 
     fn epsilon_arc(&mut self, from_state: State, to_state: State) -> Result<()> {

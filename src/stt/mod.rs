@@ -13,9 +13,11 @@ use crate::Result;
 
 mod grammar;
 mod phrase;
+mod semantics;
 
 pub use grammar::{Grammar, GrammarBuilder, Rule};
 pub use phrase::Phrase;
+pub use semantics::{SemanticString, SemanticTree, SemanticValue};
 
 pub struct Recognizer {
     intf: ISpRecoContext,
