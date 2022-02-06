@@ -8,6 +8,9 @@ pub mod stt;
 mod token;
 pub mod tts;
 
+#[cfg(feature = "tokio")]
+pub mod tokio;
+
 pub type Error = windows::core::Error;
 pub type Result<T> = windows::core::Result<T>;
 

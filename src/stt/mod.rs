@@ -14,9 +14,6 @@ mod grammar;
 mod phrase;
 mod semantics;
 
-#[cfg(feature = "tokio")]
-pub mod tokio;
-
 pub use context::{Context, EventHandler, EventfulContext, SyncContext};
 pub use grammar::{Grammar, GrammarBuilder, Rule};
 pub use phrase::Phrase;

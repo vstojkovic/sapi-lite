@@ -2,10 +2,8 @@ use std::ops::Deref;
 
 use tokio::sync::mpsc::Receiver;
 
+use crate::stt::{Context, EventfulContext, Phrase, Recognizer};
 use crate::Result;
-
-use super::context::Context;
-use super::{EventfulContext, Phrase, Recognizer};
 
 pub struct AsyncContext {
     base: EventfulContext,
