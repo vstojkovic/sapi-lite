@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
+use std::mem::ManuallyDrop;
 use std::ops::Range;
 use std::ptr::{null, null_mut};
 
@@ -14,19 +15,29 @@ use crate::com_util::{opt_str_param, out_to_ret};
 use crate::Result;
 
 use super::semantics::SemanticProperty;
-use super::SemanticValue;
+use super::{RecognitionPauser, SemanticValue};
 
 pub struct Grammar {
-    intf: ISpRecoGrammar,
+    intf: ManuallyDrop<ISpRecoGrammar>,
+    pauser: RecognitionPauser,
 }
 
 impl Grammar {
     pub fn set_enabled(&self, enabled: bool) -> Result<()> {
+        let _pause = self.pauser.pause()?;
         unsafe { self.intf.SetGrammarState(grammar_state(enabled)) }
     }
 
     pub fn set_rule_enabled<S: AsRef<str>>(&self, name: S, enabled: bool) -> Result<()> {
+        let _pause = self.pauser.pause()?;
         unsafe { self.intf.SetRuleState(name.as_ref(), null_mut(), rule_state(enabled)) }
+    }
+}
+
+impl Drop for Grammar {
+    fn drop(&mut self) {
+        let _pause = self.pauser.pause();
+        unsafe { ManuallyDrop::drop(&mut self.intf) };
     }
 }
 
@@ -57,14 +68,16 @@ pub enum Rule<'a> {
 
 pub struct GrammarBuilder<'a> {
     intf: ISpRecoContext,
+    pauser: RecognitionPauser,
     top_rules: HashSet<RuleRef<'a>>,
     rule_names: HashMap<RuleRef<'a>, Cow<'a, str>>,
 }
 
 impl<'a> GrammarBuilder<'a> {
-    pub(crate) fn from_sapi(intf: ISpRecoContext) -> Self {
+    pub(super) fn new(intf: ISpRecoContext, pauser: RecognitionPauser) -> Self {
         Self {
             intf,
+            pauser,
             top_rules: HashSet::new(),
             rule_names: HashMap::new(),
         }
@@ -99,7 +112,8 @@ impl<'a> GrammarBuilder<'a> {
         unsafe { grammar.SetGrammarState(grammar_state(false)) }?;
         unsafe { grammar.SetRuleState(None, null_mut(), rule_state(true)) }?;
         Ok(Grammar {
-            intf: grammar,
+            intf: ManuallyDrop::new(grammar),
+            pauser: self.pauser.clone(),
         })
     }
 }

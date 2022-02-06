@@ -9,16 +9,18 @@ use crate::com_util::next_elem;
 use crate::event::Event;
 use crate::Result;
 
-use super::{GrammarBuilder, Phrase, Recognizer};
+use super::{GrammarBuilder, Phrase, RecognitionPauser, Recognizer};
 
 pub struct Context {
     intf: ISpRecoContext,
+    pauser: RecognitionPauser,
 }
 
 impl Context {
-    fn new(intf: ISpRecoContext) -> Self {
+    fn new(intf: ISpRecoContext, pauser: RecognitionPauser) -> Self {
         Self {
             intf,
+            pauser,
         }
     }
 
@@ -32,7 +34,7 @@ impl Context {
     }
 
     pub fn grammar_builder(&self) -> GrammarBuilder {
-        GrammarBuilder::from_sapi(self.intf.clone())
+        GrammarBuilder::new(self.intf.clone(), self.pauser.clone())
     }
 
     fn next_event(&self) -> Result<Option<Event>> {
@@ -56,7 +58,7 @@ impl SyncContext {
         let intf = unsafe { recognizer.intf.CreateRecoContext() }?;
         unsafe { intf.SetNotifyWin32Event() }?;
         Ok(SyncContext {
-            base: Context::new(intf),
+            base: Context::new(intf, recognizer.pauser.clone()),
         })
     }
 
@@ -110,7 +112,7 @@ impl EventfulContext {
         let sink: ISpNotifySink = EventSink::new(intf.clone(), handler).into();
         unsafe { intf.SetNotifySink(sink) }?;
         Ok(Self {
-            base: Context::new(intf),
+            base: Context::new(intf, recognizer.pauser.clone()),
         })
     }
 }
