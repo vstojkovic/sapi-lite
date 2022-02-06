@@ -2,7 +2,7 @@ use windows as Windows;
 use Windows::Win32::Media::Speech::{ISpVoice, SpVoice};
 use Windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
 
-use crate::com_util::out_to_ret;
+use crate::com_util::{out_to_ret, Intf};
 use crate::token::Token;
 use crate::Result;
 
@@ -13,13 +13,13 @@ pub use self::speech::{Pitch, Rate, SayAs, Speech, SpeechBuilder, Volume};
 pub use self::voice::{installed_voices, Voice, VoiceAge, VoiceGender, VoiceSelector};
 
 pub struct Synthesizer {
-    intf: ISpVoice,
+    intf: Intf<ISpVoice>,
 }
 
 impl Synthesizer {
     pub fn new() -> Result<Self> {
         unsafe { CoCreateInstance(&SpVoice, None, CLSCTX_ALL) }.map(|intf| Self {
-            intf,
+            intf: Intf(intf),
         })
     }
 
@@ -29,9 +29,7 @@ impl Synthesizer {
 
     pub fn voice(&self) -> Result<Voice> {
         unsafe { self.intf.GetVoice() }.map(|intf| Voice {
-            token: Token {
-                intf,
-            },
+            token: Token::from_sapi(intf),
         })
     }
 
@@ -44,7 +42,7 @@ impl Synthesizer {
     }
 
     pub fn set_voice(&self, voice: Voice) -> Result<()> {
-        unsafe { self.intf.SetVoice(voice.token.intf) }
+        unsafe { self.intf.SetVoice(voice.token) }
     }
 
     pub fn set_volume<V: Into<Volume>>(&self, volume: V) -> Result<()> {

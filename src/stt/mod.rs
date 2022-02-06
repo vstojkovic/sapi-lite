@@ -6,6 +6,7 @@ use Windows::Win32::Media::Speech::{
 };
 use Windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
 
+use crate::com_util::Intf;
 use crate::token::Category;
 use crate::Result;
 
@@ -20,7 +21,7 @@ pub use phrase::Phrase;
 pub use semantics::{SemanticString, SemanticTree, SemanticValue};
 
 pub struct Recognizer {
-    intf: ISpRecognizer,
+    intf: Intf<ISpRecognizer>,
     pauser: RecognitionPauser,
     global_pause: Mutex<Option<ScopedPause>>,
 }
@@ -32,10 +33,10 @@ impl Recognizer {
 
         let category = Category::new(r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\AudioInput")?;
         let token = category.default_token()?;
-        unsafe { intf.SetInput(token.intf, false) }?;
+        unsafe { intf.SetInput(token, false) }?;
         Ok(Self {
             pauser: RecognitionPauser::new(intf.clone()),
-            intf,
+            intf: Intf(intf),
             global_pause: Mutex::new(None),
         })
     }
@@ -62,7 +63,7 @@ fn reco_state(enabled: bool) -> SPRECOSTATE {
 }
 
 struct PauserState {
-    intf: ISpRecognizer,
+    intf: Intf<ISpRecognizer>,
     pause_count: usize,
 }
 
@@ -93,7 +94,7 @@ impl RecognitionPauser {
     fn new(intf: ISpRecognizer) -> Self {
         Self {
             state: Arc::new(Mutex::new(PauserState {
-                intf,
+                intf: Intf(intf),
                 pause_count: 0,
             })),
         }

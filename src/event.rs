@@ -40,9 +40,9 @@ impl Event {
             SPET_LPARAM_IS_STRING => {
                 Ok(Self::OtherString(unsafe { ComBox::from_raw(PWSTR(lparam as _)) }))
             }
-            SPET_LPARAM_IS_TOKEN => Ok(Self::OtherToken(Token {
-                intf: unsafe { ISpObjectToken::from_abi(lparam as _) }?,
-            })),
+            SPET_LPARAM_IS_TOKEN => Ok(Self::OtherToken(Token::from_sapi(unsafe {
+                ISpObjectToken::from_abi(lparam as _)
+            }?))),
             SPET_LPARAM_IS_UNDEFINED => Ok(Self::Other),
             _ => panic!("Unrecognized SPEVENTLPARAMTYPE value"),
         }

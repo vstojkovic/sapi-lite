@@ -5,21 +5,21 @@ use windows as Windows;
 use Windows::core::implement;
 use Windows::Win32::Media::Speech::{ISpNotifySink, ISpRecoContext, SPCS_DISABLED, SPCS_ENABLED};
 
-use crate::com_util::next_elem;
+use crate::com_util::{next_elem, Intf};
 use crate::event::Event;
 use crate::Result;
 
 use super::{GrammarBuilder, Phrase, RecognitionPauser, Recognizer};
 
 pub struct Context {
-    intf: ISpRecoContext,
+    intf: Intf<ISpRecoContext>,
     pauser: RecognitionPauser,
 }
 
 impl Context {
     fn new(intf: ISpRecoContext, pauser: RecognitionPauser) -> Self {
         Self {
-            intf,
+            intf: Intf(intf),
             pauser,
         }
     }

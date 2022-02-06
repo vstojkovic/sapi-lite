@@ -1,7 +1,7 @@
 use std::ffi::OsString;
 
 use windows as Windows;
-use Windows::core::IntoParam;
+use Windows::core::{IUnknown, IntoParam, Param};
 use Windows::Win32::Foundation::PWSTR;
 use Windows::Win32::Media::Speech::{
     IEnumSpObjectTokens, ISpObjectToken, ISpObjectTokenCategory, SpObjectToken,
@@ -9,11 +9,11 @@ use Windows::Win32::Media::Speech::{
 };
 use Windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
 
-use crate::com_util::{from_wide, next_obj, opt_str_param, ComBox};
+use crate::com_util::{from_wide, next_obj, opt_str_param, ComBox, Intf};
 use crate::Result;
 
 pub(crate) struct Token {
-    pub(crate) intf: ISpObjectToken,
+    intf: Intf<ISpObjectToken>,
 }
 
 impl Token {
@@ -21,8 +21,14 @@ impl Token {
         let intf: ISpObjectToken = unsafe { CoCreateInstance(&SpObjectToken, None, CLSCTX_ALL) }?;
         unsafe { intf.SetId(None, id, false) }?;
         Ok(Token {
-            intf,
+            intf: Intf(intf),
         })
+    }
+
+    pub fn from_sapi(intf: ISpObjectToken) -> Self {
+        Token {
+            intf: Intf(intf),
+        }
     }
 
     pub fn attr(&self, name: &str) -> Result<OsString> {
@@ -32,22 +38,32 @@ impl Token {
     }
 }
 
+impl<'p> IntoParam<'p, IUnknown> for Token {
+    fn into_param(self) -> Param<'p, IUnknown> {
+        self.intf.into_param()
+    }
+}
+
+impl<'p> IntoParam<'p, ISpObjectToken> for Token {
+    fn into_param(self) -> Param<'p, ISpObjectToken> {
+        self.intf.into_param()
+    }
+}
+
 pub(crate) struct Tokens {
-    intf: IEnumSpObjectTokens,
+    intf: Intf<IEnumSpObjectTokens>,
 }
 
 impl Iterator for Tokens {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
-        unsafe { next_obj(&self.intf, IEnumSpObjectTokens::Next) }.ok()?.map(|intf| Token {
-            intf,
-        })
+        unsafe { next_obj(&self.intf.0, IEnumSpObjectTokens::Next) }.ok()?.map(Token::from_sapi)
     }
 }
 
 pub(crate) struct Category {
-    intf: ISpObjectTokenCategory,
+    intf: Intf<ISpObjectTokenCategory>,
 }
 
 impl Category {
@@ -56,14 +72,14 @@ impl Category {
             unsafe { CoCreateInstance(&SpObjectTokenCategory, None, CLSCTX_ALL) }?;
         unsafe { intf.SetId(id, false) }?;
         Ok(Self {
-            intf,
+            intf: Intf(intf),
         })
     }
 
     pub fn enum_tokens<S: AsRef<str>>(&self, req_attrs: S, opt_attrs: Option<S>) -> Result<Tokens> {
         unsafe { self.intf.EnumTokens(req_attrs.as_ref(), opt_str_param(opt_attrs).abi()) }.map(
             |intf| Tokens {
-                intf,
+                intf: Intf(intf),
             },
         )
     }

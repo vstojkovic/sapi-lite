@@ -11,14 +11,14 @@ use Windows::Win32::Media::Speech::{
     SPGS_ENABLED, SPRS_ACTIVE, SPRS_INACTIVE, SPRULESTATE, SPSTATEHANDLE__, SPWT_LEXICAL,
 };
 
-use crate::com_util::{opt_str_param, out_to_ret};
+use crate::com_util::{opt_str_param, out_to_ret, Intf};
 use crate::Result;
 
 use super::semantics::SemanticProperty;
 use super::{RecognitionPauser, SemanticValue};
 
 pub struct Grammar {
-    intf: ManuallyDrop<ISpRecoGrammar>,
+    intf: ManuallyDrop<Intf<ISpRecoGrammar>>,
     pauser: RecognitionPauser,
 }
 
@@ -67,7 +67,7 @@ pub enum Rule<'a> {
 }
 
 pub struct GrammarBuilder<'a> {
-    intf: ISpRecoContext,
+    intf: Intf<ISpRecoContext>,
     pauser: RecognitionPauser,
     top_rules: HashSet<RuleRef<'a>>,
     rule_names: HashMap<RuleRef<'a>, Cow<'a, str>>,
@@ -76,7 +76,7 @@ pub struct GrammarBuilder<'a> {
 impl<'a> GrammarBuilder<'a> {
     pub(super) fn new(intf: ISpRecoContext, pauser: RecognitionPauser) -> Self {
         Self {
-            intf,
+            intf: Intf(intf),
             pauser,
             top_rules: HashSet::new(),
             rule_names: HashMap::new(),
@@ -112,7 +112,7 @@ impl<'a> GrammarBuilder<'a> {
         unsafe { grammar.SetGrammarState(grammar_state(false)) }?;
         unsafe { grammar.SetRuleState(None, null_mut(), rule_state(true)) }?;
         Ok(Grammar {
-            intf: ManuallyDrop::new(grammar),
+            intf: ManuallyDrop::new(Intf(grammar)),
             pauser: self.pauser.clone(),
         })
     }
