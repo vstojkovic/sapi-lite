@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use windows as Windows;
 use Windows::core::implement;
-use Windows::Win32::Media::Speech::{ISpRecoContext, SPCS_DISABLED, SPCS_ENABLED, ISpNotifySink};
+use Windows::Win32::Media::Speech::{ISpNotifySink, ISpRecoContext, SPCS_DISABLED, SPCS_ENABLED};
 
 use crate::com_util::next_elem;
 use crate::event::Event;
@@ -110,7 +110,7 @@ impl EventfulContext {
         let sink: ISpNotifySink = EventSink::new(intf.clone(), handler).into();
         unsafe { intf.SetNotifySink(sink) }?;
         Ok(Self {
-            base: Context::new(intf)
+            base: Context::new(intf),
         })
     }
 }

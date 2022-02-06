@@ -6,8 +6,8 @@ use std::ptr::{null, null_mut};
 
 use windows as Windows;
 use Windows::Win32::Media::Speech::{
-    ISpRecoContext, ISpRecoGrammar, SPRAF_Active, SPRAF_TopLevel, SPRS_ACTIVE, SPRS_INACTIVE,
-    SPRULESTATE, SPSTATEHANDLE__, SPWT_LEXICAL, SPGRAMMARSTATE, SPGS_ENABLED, SPGS_DISABLED,
+    ISpRecoContext, ISpRecoGrammar, SPRAF_Active, SPRAF_TopLevel, SPGRAMMARSTATE, SPGS_DISABLED,
+    SPGS_ENABLED, SPRS_ACTIVE, SPRS_INACTIVE, SPRULESTATE, SPSTATEHANDLE__, SPWT_LEXICAL,
 };
 
 use crate::com_util::{opt_str_param, out_to_ret};
@@ -97,7 +97,7 @@ impl<'a> GrammarBuilder<'a> {
         }
         unsafe { grammar.Commit(0) }?;
         unsafe { grammar.SetGrammarState(grammar_state(false)) }?;
-        unsafe { grammar.SetRuleState(None, null_mut(), rule_state(true) )}?;
+        unsafe { grammar.SetRuleState(None, null_mut(), rule_state(true)) }?;
         Ok(Grammar {
             intf: grammar,
         })

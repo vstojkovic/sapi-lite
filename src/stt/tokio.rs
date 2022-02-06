@@ -4,8 +4,8 @@ use tokio::sync::mpsc::Receiver;
 
 use crate::Result;
 
-use super::{EventfulContext, Recognizer, Phrase};
 use super::context::Context;
+use super::{EventfulContext, Phrase, Recognizer};
 
 pub struct AsyncContext {
     base: EventfulContext,
@@ -20,7 +20,7 @@ impl AsyncContext {
         };
         Ok(Self {
             base: EventfulContext::new(recognizer, handler)?,
-            rx
+            rx,
         })
     }
 
