@@ -22,8 +22,8 @@ impl Context {
         }
     }
 
-    pub fn set_state(&self, active: bool) -> Result<()> {
-        let state = if active {
+    pub fn set_enabled(&self, enabled: bool) -> Result<()> {
+        let state = if enabled {
             SPCS_ENABLED
         } else {
             SPCS_DISABLED

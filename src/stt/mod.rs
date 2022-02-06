@@ -37,8 +37,8 @@ impl Recognizer {
         })
     }
 
-    pub fn set_state(&self, active: bool) -> Result<()> {
-        let state = if active {
+    pub fn set_enabled(&self, enabled: bool) -> Result<()> {
+        let state = if enabled {
             SPRST_ACTIVE
         } else {
             SPRST_INACTIVE
@@ -50,6 +50,6 @@ impl Recognizer {
 impl Drop for Recognizer {
     fn drop(&mut self) {
         // The following call is expected to succeed, but failure shouldn't cause panic
-        let _ = self.set_state(false);
+        let _ = self.set_enabled(false);
     }
 }

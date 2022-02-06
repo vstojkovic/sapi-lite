@@ -7,7 +7,7 @@ use std::ptr::{null, null_mut};
 use windows as Windows;
 use Windows::Win32::Media::Speech::{
     ISpRecoContext, ISpRecoGrammar, SPRAF_Active, SPRAF_TopLevel, SPRS_ACTIVE, SPRS_INACTIVE,
-    SPRULESTATE, SPSTATEHANDLE__, SPWT_LEXICAL,
+    SPRULESTATE, SPSTATEHANDLE__, SPWT_LEXICAL, SPGRAMMARSTATE, SPGS_ENABLED, SPGS_DISABLED,
 };
 
 use crate::com_util::{opt_str_param, out_to_ret};
@@ -21,17 +21,25 @@ pub struct Grammar {
 }
 
 impl Grammar {
-    pub fn set_grammar_state(&self, active: bool) -> Result<()> {
-        unsafe { self.intf.SetRuleState(None, null_mut(), rule_state(active)) }
+    pub fn set_enabled(&self, enabled: bool) -> Result<()> {
+        unsafe { self.intf.SetGrammarState(grammar_state(enabled)) }
     }
 
-    pub fn set_rule_state<S: AsRef<str>>(&self, name: S, active: bool) -> Result<()> {
-        unsafe { self.intf.SetRuleState(name.as_ref(), null_mut(), rule_state(active)) }
+    pub fn set_rule_enabled<S: AsRef<str>>(&self, name: S, enabled: bool) -> Result<()> {
+        unsafe { self.intf.SetRuleState(name.as_ref(), null_mut(), rule_state(enabled)) }
     }
 }
 
-fn rule_state(active: bool) -> SPRULESTATE {
-    if active {
+fn grammar_state(enabled: bool) -> SPGRAMMARSTATE {
+    if enabled {
+        SPGS_ENABLED
+    } else {
+        SPGS_DISABLED
+    }
+}
+
+fn rule_state(enabled: bool) -> SPRULESTATE {
+    if enabled {
         SPRS_ACTIVE
     } else {
         SPRS_INACTIVE
@@ -88,6 +96,8 @@ impl<'a> GrammarBuilder<'a> {
             rule_builder.build_rule(rule.0)?;
         }
         unsafe { grammar.Commit(0) }?;
+        unsafe { grammar.SetGrammarState(grammar_state(false)) }?;
+        unsafe { grammar.SetRuleState(None, null_mut(), rule_state(true) )}?;
         Ok(Grammar {
             intf: grammar,
         })
