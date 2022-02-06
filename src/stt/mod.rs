@@ -15,7 +15,7 @@ mod semantics;
 #[cfg(feature = "tokio")]
 pub mod tokio;
 
-pub use context::{EventHandler, EventfulContext, SyncContext};
+pub use context::{Context, EventHandler, EventfulContext, SyncContext};
 pub use grammar::{Grammar, GrammarBuilder, Rule};
 pub use phrase::Phrase;
 pub use semantics::{SemanticString, SemanticTree, SemanticValue};
