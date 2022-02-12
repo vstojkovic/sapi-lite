@@ -2,6 +2,7 @@ use std::ptr::null;
 
 use windows::Win32::System::Com::{CoInitialize, CoUninitialize};
 
+pub mod audio;
 mod com_util;
 mod event;
 pub mod stt;

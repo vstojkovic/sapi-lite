@@ -31,6 +31,10 @@ impl Token {
         }
     }
 
+    pub fn to_sapi(self) -> ISpObjectToken {
+        self.intf.0
+    }
+
     pub fn attr(&self, name: &str) -> Result<OsString> {
         let attrs = unsafe { self.intf.OpenKey("Attributes") }?;
         let value = unsafe { ComBox::from_raw(attrs.GetStringValue(name)?) };

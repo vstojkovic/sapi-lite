@@ -1,11 +1,13 @@
 use std::sync::{Arc, Mutex};
 
 use windows as Windows;
+use Windows::core::IUnknown;
 use Windows::Win32::Media::Speech::{
     ISpRecognizer, SpInprocRecognizer, SPRECOSTATE, SPRST_ACTIVE, SPRST_INACTIVE,
 };
 use Windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
 
+use crate::audio::AudioStream;
 use crate::com_util::Intf;
 use crate::token::Category;
 use crate::Result;
@@ -20,6 +22,25 @@ pub use grammar::{Grammar, GrammarBuilder, RepeatRange, Rule};
 pub use phrase::Phrase;
 pub use semantics::{SemanticString, SemanticTree, SemanticValue};
 
+pub enum Input {
+    Default,
+    Stream(AudioStream),
+}
+
+impl Input {
+    fn to_sapi(self) -> Result<IUnknown> {
+        Ok(match self {
+            Self::Default => {
+                Category::new(r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\AudioInput")?
+                    .default_token()?
+                    .to_sapi()
+                    .0
+            }
+            Self::Stream(stream) => stream.to_sapi().0,
+        })
+    }
+}
+
 pub struct Recognizer {
     intf: Intf<ISpRecognizer>,
     pauser: RecognitionPauser,
@@ -30,15 +51,16 @@ impl Recognizer {
     pub fn new() -> Result<Self> {
         let intf: ISpRecognizer =
             unsafe { CoCreateInstance(&SpInprocRecognizer, None, CLSCTX_ALL) }?;
-
-        let category = Category::new(r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\AudioInput")?;
-        let token = category.default_token()?;
-        unsafe { intf.SetInput(token, false) }?;
+        unsafe { intf.SetInput(Input::Default.to_sapi()?, false) }?;
         Ok(Self {
             pauser: RecognitionPauser::new(intf.clone()),
             intf: Intf(intf),
             global_pause: Mutex::new(None),
         })
+    }
+
+    pub fn set_input(&self, input: Input, allow_fmt_changes: bool) -> Result<()> {
+        unsafe { self.intf.SetInput(input.to_sapi()?, allow_fmt_changes) }
     }
 
     pub fn set_enabled(&self, enabled: bool) -> Result<()> {

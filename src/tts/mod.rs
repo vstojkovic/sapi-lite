@@ -1,7 +1,9 @@
 use windows as Windows;
+use Windows::core::IUnknown;
 use Windows::Win32::Media::Speech::{ISpVoice, SpVoice};
 use Windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
 
+use crate::audio::AudioStream;
 use crate::com_util::{out_to_ret, Intf};
 use crate::token::Token;
 use crate::Result;
@@ -12,6 +14,20 @@ mod voice;
 pub use self::speech::{Pitch, Rate, SayAs, Speech, SpeechBuilder, Volume};
 pub use self::voice::{installed_voices, Voice, VoiceAge, VoiceGender, VoiceSelector};
 
+pub enum Output {
+    Default,
+    Stream(AudioStream),
+}
+
+impl Output {
+    fn to_sapi(self) -> Option<IUnknown> {
+        match self {
+            Self::Default => None,
+            Self::Stream(stream) => Some(stream.to_sapi().0),
+        }
+    }
+}
+
 pub struct Synthesizer {
     intf: Intf<ISpVoice>,
 }
@@ -21,6 +37,10 @@ impl Synthesizer {
         unsafe { CoCreateInstance(&SpVoice, None, CLSCTX_ALL) }.map(|intf| Self {
             intf: Intf(intf),
         })
+    }
+
+    pub fn set_output(&self, output: Output, allow_fmt_changes: bool) -> Result<()> {
+        unsafe { self.intf.SetOutput(output.to_sapi(), allow_fmt_changes) }
     }
 
     pub fn rate(&self) -> Result<Rate> {

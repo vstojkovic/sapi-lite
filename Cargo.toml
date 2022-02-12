@@ -12,5 +12,5 @@ tokio-stt = ["tokio/sync"]
 strum = "0.23"
 strum_macros = "0.23"
 tokio = { version = "1.16", optional = true }
-windows = { version = "0.28", features = ["alloc", "build", "std", "Win32_Foundation", "Win32_Media_Speech", "Win32_System_Com", "Win32_System_Ole"] }
+windows = { version = "0.28", features = ["alloc", "build", "std", "Win32_Foundation", "Win32_Media_Audio", "Win32_Media_Speech", "Win32_System_Com", "Win32_System_Ole"] }
 xml-rs = "0.8.4"
