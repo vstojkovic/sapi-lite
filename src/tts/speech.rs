@@ -249,6 +249,15 @@ impl SpeechBuilder {
         self.end_element("volume")
     }
 
+    pub fn build<'s>(self) -> Speech<'s> {
+        match self {
+            Self::Text(contents) => Speech::Text(contents.into()),
+            Self::Xml(writer) => {
+                Speech::Xml(String::from_utf8(writer.into_inner()).unwrap().into())
+            }
+        }
+    }
+
     fn end_element(self, name: &str) -> Self {
         self.append_xml(XmlEvent::end_element().name(name).into())
     }
@@ -276,11 +285,6 @@ impl SpeechBuilder {
 
 impl<'s> From<SpeechBuilder> for Speech<'s> {
     fn from(builder: SpeechBuilder) -> Self {
-        match builder {
-            SpeechBuilder::Text(contents) => Self::Text(contents.into()),
-            SpeechBuilder::Xml(writer) => {
-                Self::Xml(String::from_utf8(writer.into_inner()).unwrap().into())
-            }
-        }
+        builder.build()
     }
 }
