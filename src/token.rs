@@ -12,6 +12,7 @@ use Windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
 use crate::com_util::{from_wide, next_obj, opt_str_param, ComBox, Intf};
 use crate::Result;
 
+#[derive(Debug)]
 pub(crate) struct Token {
     intf: Intf<ISpObjectToken>,
 }

@@ -61,6 +61,7 @@ pub unsafe fn next_obj<I: Interface, R: Interface>(
 }
 
 // A zero-cost wrapper that makes a COM interface Send and Sync
+#[derive(Debug)]
 pub struct Intf<I: Interface>(pub I);
 
 unsafe impl<I: Interface> Send for Intf<I> {}
@@ -101,6 +102,7 @@ unsafe impl ComBuffer for PWSTR {
     }
 }
 
+#[derive(Debug)]
 pub struct ComBox<P: ComBuffer>(P);
 
 impl<P: ComBuffer> ComBox<P> {

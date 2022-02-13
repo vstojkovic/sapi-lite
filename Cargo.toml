@@ -4,13 +4,17 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-tokio-all = ["tokio-rt", "tokio-stt"]
+tokio-all = ["tokio-rt", "tokio-stt", "tokio-tts"]
 tokio-rt = ["tokio/rt"]
 tokio-stt = ["tokio/sync"]
+tokio-tts = ["tokio/sync"]
 
 [dependencies]
 strum = "0.23"
 strum_macros = "0.23"
 tokio = { version = "1.16", optional = true }
-windows = { version = "0.28", features = ["alloc", "build", "std", "Win32_Foundation", "Win32_Media_Audio", "Win32_Media_Speech", "Win32_System_Com", "Win32_System_Ole"] }
+windows = { version = "0.28", features = [
+    "alloc", "build", "std", "Win32_Foundation", "Win32_Media_Audio", "Win32_Media_Speech",
+    "Win32_System_Com", "Win32_System_Ole", "Win32_System_WindowsProgramming"
+] }
 xml-rs = "0.8.4"
