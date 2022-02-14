@@ -2,124 +2,18 @@ use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 use std::mem::ManuallyDrop;
-use std::ops::{RangeInclusive, RangeToInclusive};
 use std::ptr::{null, null_mut};
 
-use windows as Windows;
-use Windows::Win32::Media::Speech::{
-    ISpRecoContext, ISpRecoGrammar, SPRAF_Active, SPRAF_TopLevel, SPGRAMMARSTATE, SPGS_DISABLED,
-    SPGS_ENABLED, SPRS_ACTIVE, SPRS_INACTIVE, SPRULESTATE, SPSTATEHANDLE__, SPWT_LEXICAL,
+use windows::Win32::Media::Speech::{
+    ISpRecoContext, ISpRecoGrammar, SPRAF_Active, SPRAF_TopLevel, SPSTATEHANDLE__, SPWT_LEXICAL,
 };
 
 use crate::com_util::{opt_str_param, out_to_ret, Intf};
+use crate::stt::semantics::SemanticProperty;
+use crate::stt::{RecognitionPauser, SemanticValue};
 use crate::Result;
 
-use super::semantics::SemanticProperty;
-use super::{RecognitionPauser, SemanticValue};
-
-pub struct Grammar {
-    intf: ManuallyDrop<Intf<ISpRecoGrammar>>,
-    pauser: RecognitionPauser,
-}
-
-impl Grammar {
-    pub fn set_enabled(&self, enabled: bool) -> Result<()> {
-        let _pause = self.pauser.pause()?;
-        unsafe { self.intf.SetGrammarState(grammar_state(enabled)) }
-    }
-
-    pub fn set_rule_enabled<S: AsRef<str>>(&self, name: S, enabled: bool) -> Result<()> {
-        let _pause = self.pauser.pause()?;
-        unsafe { self.intf.SetRuleState(name.as_ref(), null_mut(), rule_state(enabled)) }
-    }
-}
-
-impl Drop for Grammar {
-    fn drop(&mut self) {
-        let _pause = self.pauser.pause();
-        unsafe { ManuallyDrop::drop(&mut self.intf) };
-    }
-}
-
-fn grammar_state(enabled: bool) -> SPGRAMMARSTATE {
-    if enabled {
-        SPGS_ENABLED
-    } else {
-        SPGS_DISABLED
-    }
-}
-
-fn rule_state(enabled: bool) -> SPRULESTATE {
-    if enabled {
-        SPRS_ACTIVE
-    } else {
-        SPRS_INACTIVE
-    }
-}
-
-#[derive(Debug)]
-pub enum Rule<'a> {
-    Text(Cow<'a, str>),
-    Choice(Cow<'a, [&'a Rule<'a>]>),
-    Sequence(Cow<'a, [&'a Rule<'a>]>),
-    Repeat(RepeatRange, &'a Rule<'a>),
-    Semantic(SemanticValue<Cow<'a, str>>, &'a Rule<'a>),
-}
-
-impl<'a> Rule<'a> {
-    pub fn text<T: Into<Cow<'a, str>>>(text: T) -> Self {
-        Self::Text(text.into())
-    }
-
-    pub fn choice<L: Into<Cow<'a, [&'a Rule<'a>]>>>(options: L) -> Self {
-        Self::Choice(options.into())
-    }
-
-    pub fn sequence<L: Into<Cow<'a, [&'a Rule<'a>]>>>(parts: L) -> Self {
-        Self::Sequence(parts.into())
-    }
-
-    pub fn repeat<R: Into<RepeatRange>>(times: R, target: &'a Rule<'a>) -> Self {
-        Self::Repeat(times.into(), target)
-    }
-
-    pub fn semantic<V: Into<SemanticValue<Cow<'a, str>>>>(value: V, target: &'a Rule<'a>) -> Self {
-        Self::Semantic(value.into(), target)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct RepeatRange {
-    pub min: usize,
-    pub max: usize,
-}
-
-impl From<usize> for RepeatRange {
-    fn from(source: usize) -> Self {
-        Self {
-            min: source,
-            max: source,
-        }
-    }
-}
-
-impl From<RangeInclusive<usize>> for RepeatRange {
-    fn from(source: RangeInclusive<usize>) -> Self {
-        Self {
-            min: *source.start(),
-            max: *source.end(),
-        }
-    }
-}
-
-impl From<RangeToInclusive<usize>> for RepeatRange {
-    fn from(source: RangeToInclusive<usize>) -> Self {
-        Self {
-            min: 0,
-            max: source.end,
-        }
-    }
-}
+use super::{grammar_state, rule_state, Grammar, RepeatRange, Rule};
 
 pub struct GrammarBuilder<'a> {
     intf: Intf<ISpRecoContext>,
@@ -129,7 +23,7 @@ pub struct GrammarBuilder<'a> {
 }
 
 impl<'a> GrammarBuilder<'a> {
-    pub(super) fn new(intf: ISpRecoContext, pauser: RecognitionPauser) -> Self {
+    pub(in crate::stt) fn new(intf: ISpRecoContext, pauser: RecognitionPauser) -> Self {
         Self {
             intf: Intf(intf),
             pauser,
