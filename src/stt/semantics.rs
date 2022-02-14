@@ -57,7 +57,7 @@ impl<'s> SemanticString for Cow<'s, OsStr> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum SemanticValue<S: SemanticString> {
     Bool(bool),
     Int(i32),
@@ -165,7 +165,7 @@ impl<F: SemanticString + Into<T>, T: SemanticString> From<F> for SemanticValue<T
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct SemanticTree {
     pub value: SemanticValue<OsString>,
     pub children: Vec<SemanticTree>,
