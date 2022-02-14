@@ -1,5 +1,4 @@
-use std::borrow::Cow;
-use std::ffi::{OsStr, OsString};
+use std::ffi::OsString;
 use std::mem::ManuallyDrop;
 
 use windows as Windows;
@@ -11,51 +10,7 @@ use Windows::Win32::System::Ole::{VARENUM, VT_BOOL, VT_EMPTY, VT_I4, VT_R4, VT_R
 
 use crate::com_util::from_wide;
 
-pub trait SemanticString {
-    fn as_os_str(&self) -> &OsStr;
-}
-
-impl<'s> SemanticString for &'s str {
-    fn as_os_str(&self) -> &OsStr {
-        OsStr::new(self)
-    }
-}
-
-impl SemanticString for String {
-    fn as_os_str(&self) -> &OsStr {
-        OsStr::new(self)
-    }
-}
-
-impl<'s> SemanticString for &'s OsStr {
-    fn as_os_str(&self) -> &OsStr {
-        self
-    }
-}
-
-impl SemanticString for OsString {
-    fn as_os_str(&self) -> &OsStr {
-        self.as_os_str()
-    }
-}
-
-impl<'s> SemanticString for Cow<'s, str> {
-    fn as_os_str(&self) -> &OsStr {
-        match self {
-            Cow::Borrowed(s) => s.as_os_str(),
-            Cow::Owned(s) => s.as_os_str(),
-        }
-    }
-}
-
-impl<'s> SemanticString for Cow<'s, OsStr> {
-    fn as_os_str(&self) -> &OsStr {
-        match self {
-            Cow::Borrowed(s) => *s,
-            Cow::Owned(s) => s.as_os_str(),
-        }
-    }
-}
+use super::SemanticString;
 
 #[derive(Debug, PartialEq)]
 pub enum SemanticValue<S: SemanticString> {
@@ -118,7 +73,7 @@ impl<S: SemanticString> SemanticValue<S> {
 }
 
 impl SemanticValue<OsString> {
-    fn from_sapi(property: &SPPHRASEPROPERTY) -> Result<Self, VARENUM> {
+    pub(super) fn from_sapi(property: &SPPHRASEPROPERTY) -> Result<Self, VARENUM> {
         if !property.pszValue.is_null() {
             Ok(Self::String(unsafe { from_wide(&property.pszValue) }.into()))
         } else {
@@ -162,29 +117,6 @@ impl<S: SemanticString> From<f64> for SemanticValue<S> {
 impl<F: SemanticString + Into<T>, T: SemanticString> From<F> for SemanticValue<T> {
     fn from(source: F) -> Self {
         Self::String(source.into())
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct SemanticTree {
-    pub value: SemanticValue<OsString>,
-    pub children: Vec<SemanticTree>,
-}
-
-impl SemanticTree {
-    pub(crate) fn from_sapi(sapi_prop: Option<&SPPHRASEPROPERTY>) -> Vec<Self> {
-        let mut result = Vec::new();
-        let mut next_prop = sapi_prop;
-        while let Some(prop) = next_prop {
-            if let Ok(value) = SemanticValue::from_sapi(prop) {
-                result.push(SemanticTree {
-                    value,
-                    children: SemanticTree::from_sapi(unsafe { prop.pFirstChild.as_ref() }),
-                });
-            }
-            next_prop = unsafe { prop.pNextSibling.as_ref() };
-        }
-        result
     }
 }
 
