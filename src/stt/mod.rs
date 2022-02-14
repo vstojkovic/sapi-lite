@@ -22,12 +22,12 @@ pub use grammar::{Grammar, GrammarBuilder, RepeatRange, Rule};
 pub use phrase::Phrase;
 pub use semantics::{SemanticString, SemanticTree, SemanticValue};
 
-pub enum Input {
+pub enum RecognitionInput {
     Default,
     Stream(AudioStream),
 }
 
-impl Input {
+impl RecognitionInput {
     fn to_sapi(self) -> Result<IUnknown> {
         Ok(match self {
             Self::Default => {
@@ -51,7 +51,7 @@ impl Recognizer {
     pub fn new() -> Result<Self> {
         let intf: ISpRecognizer =
             unsafe { CoCreateInstance(&SpInprocRecognizer, None, CLSCTX_ALL) }?;
-        unsafe { intf.SetInput(Input::Default.to_sapi()?, false) }?;
+        unsafe { intf.SetInput(RecognitionInput::Default.to_sapi()?, false) }?;
         Ok(Self {
             pauser: RecognitionPauser::new(intf.clone()),
             intf: Intf(intf),
@@ -59,7 +59,7 @@ impl Recognizer {
         })
     }
 
-    pub fn set_input(&self, input: Input, allow_fmt_changes: bool) -> Result<()> {
+    pub fn set_input(&self, input: RecognitionInput, allow_fmt_changes: bool) -> Result<()> {
         unsafe { self.intf.SetInput(input.to_sapi()?, allow_fmt_changes) }
     }
 

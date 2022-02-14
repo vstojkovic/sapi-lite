@@ -19,12 +19,12 @@ mod voice;
 pub use self::speech::{Pitch, Rate, SayAs, Speech, SpeechBuilder, Volume};
 pub use self::voice::{installed_voices, Voice, VoiceAge, VoiceGender, VoiceSelector};
 
-pub enum Output {
+pub enum SpeechOutput {
     Default,
     Stream(AudioStream),
 }
 
-impl Output {
+impl SpeechOutput {
     fn to_sapi(self) -> Option<IUnknown> {
         match self {
             Self::Default => None,
@@ -44,7 +44,7 @@ impl Synthesizer {
         })
     }
 
-    pub fn set_output(&self, output: Output, allow_fmt_changes: bool) -> Result<()> {
+    pub fn set_output(&self, output: SpeechOutput, allow_fmt_changes: bool) -> Result<()> {
         unsafe { self.intf.SetOutput(output.to_sapi(), allow_fmt_changes) }
     }
 
