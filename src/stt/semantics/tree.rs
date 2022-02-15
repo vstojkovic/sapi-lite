@@ -5,7 +5,7 @@ use Windows::Win32::Media::Speech::SPPHRASEPROPERTY;
 
 use super::SemanticValue;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct SemanticTree {
     pub value: SemanticValue<OsString>,
     pub children: Vec<SemanticTree>,

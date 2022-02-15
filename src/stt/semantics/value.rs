@@ -12,7 +12,7 @@ use crate::com_util::from_wide;
 
 use super::SemanticString;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum SemanticValue<S: SemanticString> {
     Bool(bool),
     Int(i32),

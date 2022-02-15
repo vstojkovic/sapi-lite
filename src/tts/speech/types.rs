@@ -1,6 +1,7 @@
 use std::fmt::Display;
 use std::hash::Hash;
 
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
 pub enum SayAs<'s> {
     DateMDY,
     DateDMY,
@@ -43,7 +44,7 @@ impl<'s> SayAs<'s> {
 
 macro_rules! decl_clamped_int {
     {$name:ident($base:ty) in $min:literal..$max:literal} => {
-        #[derive(Hash, PartialEq, Eq, PartialOrd, Ord)]
+        #[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
         pub struct $name($base);
 
         impl $name {

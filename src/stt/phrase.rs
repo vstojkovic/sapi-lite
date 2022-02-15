@@ -9,7 +9,7 @@ use crate::Result;
 
 use super::SemanticTree;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Phrase {
     pub text: OsString,
     pub semantics: Vec<SemanticTree>,

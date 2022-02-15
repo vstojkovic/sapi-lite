@@ -9,6 +9,7 @@ mod types;
 pub use builder::SpeechBuilder;
 pub use types::{Pitch, Rate, SayAs, Volume};
 
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Speech<'s> {
     Text(Cow<'s, str>),
     Xml(Cow<'s, str>),
