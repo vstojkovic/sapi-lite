@@ -15,6 +15,22 @@ use crate::Result;
 
 use super::{grammar_state, rule_state, Grammar, RepeatRange, Rule};
 
+/// Helper type that constructs a grammar from a set of top-level rules.
+///
+/// A top-level rule defines one or more phrases that can be recognized. The rules contained in or
+/// referenced by a top-level rule will not be recognized as phrases, unless they are also added as
+/// top-level rules. For example, consider the following top-level rule definition:
+/// ```
+/// Rule::sequence(vec![
+///     &Rule::text("good"),
+///     &Rule::choice(vec![
+///         &Rule::text("morning"),
+///         &Rule::text("evening"),
+///     ])
+/// ])
+/// ```
+/// Given this rule, the engine will only recognize the phrases "good morning" and "good evening",
+/// but not "good", "morning", or "evening".
 pub struct GrammarBuilder<'a> {
     intf: Intf<ISpRecoContext>,
     pauser: RecognitionPauser,
@@ -32,11 +48,14 @@ impl<'a> GrammarBuilder<'a> {
         }
     }
 
+    /// Adds an unnamed top-level rule to the grammar.
     pub fn add_rule(&mut self, rule: &'a Rule<'a>) -> &mut Self {
         self.top_rules.insert(RuleRef(rule));
         self
     }
 
+    /// Adds a top-level rule with the given name to the grammar. The name can be used to enable
+    /// or disable the rule.
     pub fn add_named_rule<S: Into<Cow<'a, str>>>(
         &mut self,
         name: S,
@@ -47,6 +66,9 @@ impl<'a> GrammarBuilder<'a> {
         self
     }
 
+    /// Builds the grammar from the given rules and loads it into the recognition context. The
+    /// newly loaded grammar must be enabled before the engine will start recognizing phrases from
+    /// it.
     pub fn build(&mut self) -> Result<Grammar> {
         let grammar = unsafe { self.intf.CreateGrammar(0) }?;
         let mut rule_builder = RecursiveRuleBuilder {

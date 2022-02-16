@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
+default = []
 tokio-all = ["tokio-rt", "tokio-stt", "tokio-tts"]
 tokio-rt = ["tokio/rt"]
 tokio-stt = ["tokio/sync"]
@@ -18,3 +19,7 @@ windows = { version = "0.28", features = [
     "Win32_System_Com", "Win32_System_Ole", "Win32_System_WindowsProgramming", "Win32_UI_Shell"
 ] }
 xml-rs = "0.8.4"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

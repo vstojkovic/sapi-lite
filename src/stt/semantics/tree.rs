@@ -5,9 +5,12 @@ use Windows::Win32::Media::Speech::SPPHRASEPROPERTY;
 
 use super::SemanticValue;
 
+/// A tree of values that forms part of the semantic information for a recognized phrase.
 #[derive(Debug, PartialEq, Clone)]
 pub struct SemanticTree {
+    /// The value at the root of this tree.
     pub value: SemanticValue<OsString>,
+    /// The sub-trees that form this tree.
     pub children: Vec<SemanticTree>,
 }
 

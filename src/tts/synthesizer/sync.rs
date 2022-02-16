@@ -10,17 +10,20 @@ use crate::Result;
 
 use super::Synthesizer;
 
+/// A speech synthesizer that blocks the current thread while rendering speech.
 pub struct SyncSynthesizer {
     base: Synthesizer,
 }
 
 impl SyncSynthesizer {
+    /// Creates a new synthesizer, configured to output its speech to the default audio device.
     pub fn new() -> Result<Self> {
         Ok(Self {
             base: Synthesizer::new()?,
         })
     }
 
+    /// Renders the given speech, blocking the thread until done or until the given timeout expires.
     pub fn speak<'s, S: Into<Speech<'s>>>(
         &self,
         speech: S,

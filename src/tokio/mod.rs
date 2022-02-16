@@ -1,3 +1,6 @@
+// #![cfg_attr(docsrs, doc(cfg(any(feature = "tokio-rt", feature = "tokio-stt", feature = "tokio-tts"))))]
+//! Support for async operations running on Tokio.
+
 #[cfg(feature = "tokio-rt")]
 mod rt;
 #[cfg(feature = "tokio-stt")]

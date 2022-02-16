@@ -12,7 +12,9 @@ use crate::com_util::from_wide;
 
 use super::SemanticString;
 
+/// A value that forms part of the semantic information for a recognized phrase.
 #[derive(Debug, PartialEq, Clone)]
+#[allow(missing_docs)]
 pub enum SemanticValue<S: SemanticString> {
     Bool(bool),
     Int(i32),
@@ -22,6 +24,7 @@ pub enum SemanticValue<S: SemanticString> {
 }
 
 impl<S: SemanticString> SemanticValue<S> {
+    /// Converts the value from one generic type into a compatible generic type.
     pub fn into<T: SemanticString>(self) -> SemanticValue<T>
     where
         S: Into<T>,

@@ -1,3 +1,5 @@
+//! Support for streaming audio to and from files and memory buffers.
+
 mod format;
 mod stream;
 

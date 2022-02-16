@@ -10,12 +10,14 @@ use crate::Result;
 
 use super::Context;
 
+/// A recognition context that blocks the current thread until the engine recognizes a phrase.
 pub struct SyncContext {
     base: Context,
     event_src: EventSource,
 }
 
 impl SyncContext {
+    /// Creates a new recognition context for the given recognizer.
     pub fn new(recognizer: &Recognizer) -> Result<Self> {
         let intf = unsafe { recognizer.intf.CreateRecoContext() }?;
         unsafe { intf.SetNotifyWin32Event() }?;
@@ -25,6 +27,8 @@ impl SyncContext {
         })
     }
 
+    /// Blocks the current thread until the engine recognizes a phrase or until the given timeout
+    /// expires.
     pub fn recognize(&self, timeout: Duration) -> Result<Option<Phrase>> {
         let result = self.next_phrase()?;
         if result.is_some() {

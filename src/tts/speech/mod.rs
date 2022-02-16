@@ -9,9 +9,12 @@ mod types;
 pub use builder::SpeechBuilder;
 pub use types::{Pitch, Rate, SayAs, Volume};
 
+/// A speech to be rendered by a synthesizer.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Speech<'s> {
+    /// Plain text
     Text(Cow<'s, str>),
+    /// XML-encoded speech
     Xml(Cow<'s, str>),
 }
 

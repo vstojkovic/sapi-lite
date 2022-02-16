@@ -1,7 +1,9 @@
 use windows as Windows;
 use Windows::Win32::Media::Audio::{WAVEFORMATEX, WAVE_FORMAT_PCM};
 
+/// Sample rate, in samples per second, at which to play or record.
 #[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[allow(missing_docs)]
 pub enum SampleRate {
     Hz8000 = 8000,
     Hz11025 = 11025,
@@ -14,22 +16,30 @@ pub enum SampleRate {
     Hz48000 = 48000,
 }
 
+/// How many bits each sample should have.
 #[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[allow(missing_docs)]
 pub enum BitRate {
     Bits8 = 8,
     Bits16 = 16,
 }
 
+/// Number of audio channels.
 #[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[allow(missing_docs)]
 pub enum Channels {
     Mono = 1,
     Stereo = 2,
 }
 
+/// Specifies the format of the audio data in a stream.
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub struct AudioFormat {
+    /// Sample rate at which to play or record.
     pub sample_rate: SampleRate,
+    /// How many bits each sample should have.
     pub bit_rate: BitRate,
+    /// Number of channels.
     pub channels: Channels,
 }
 

@@ -12,12 +12,15 @@ enum PendingSpeech {
     Finished,
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "tokio-tts")))]
+/// A speech synthesizer that returns a future for every speech it renders.
 pub struct AsyncSynthesizer {
     base: EventfulSynthesizer,
     pending_speeches: Arc<Mutex<HashMap<u32, PendingSpeech>>>,
 }
 
 impl AsyncSynthesizer {
+    /// Creates a new synthesizer, configured to output its speech to the default audio device.
     pub fn new() -> Result<Self> {
         let pending_speeches = Arc::new(Mutex::new(HashMap::<u32, PendingSpeech>::new()));
         let handler = {
@@ -37,6 +40,7 @@ impl AsyncSynthesizer {
         })
     }
 
+    /// Completes when the synthesizer finished rendering the given speech.
     pub async fn speak<'s, S: Into<Speech<'s>>>(&self, speech: S) -> Result<()> {
         let id = self.base.speak(speech)?;
         let rx = {

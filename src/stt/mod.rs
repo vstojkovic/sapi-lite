@@ -1,3 +1,27 @@
+//! Speech recognition API.
+//!
+//! ## Recognizer
+//!
+//! The entry point for speech recognition is the [`Recognizer`], which encapsulates an in-process
+//! speech recognition engine. You generally won't need more than one instance of the recognizer.
+//!
+//! ## Context
+//!
+//! The recognizer can have one or more recognition contexts. This module provides two variants of
+//! contexts:
+//! * [`SyncContext`] will block the current thread until the engine recognizes a phrase, or until
+//! the given timeout.
+//! * [`EventfulContext`] will call the supplied event handler whenever the engine recognizes a
+//! phrase.
+//!
+//! For asynchronous recognition, see the [`tokio`](crate::tokio) module.
+//!
+//! ## Grammar
+//!
+//! Each context can have one or more grammars loaded into it. A grammar consists of one or more
+//! rules that define what phrases the engine can recognize. You can enable or disable the whole
+//! grammar, or individual rules in it by their name.
+
 use std::sync::{Arc, Mutex};
 
 use windows as Windows;
@@ -22,8 +46,11 @@ pub use grammar::{Grammar, GrammarBuilder, RepeatRange, Rule};
 pub use phrase::Phrase;
 pub use semantics::{SemanticString, SemanticTree, SemanticValue};
 
+/// Specifies where the input for speech recognition should come from.
 pub enum RecognitionInput {
+    /// Listen to the default recording device on the system
     Default,
+    /// Read from the given stream
     Stream(AudioStream),
 }
 
@@ -41,6 +68,7 @@ impl RecognitionInput {
     }
 }
 
+/// The in-process speech recognition engine.
 pub struct Recognizer {
     intf: Intf<ISpRecognizer>,
     pauser: RecognitionPauser,
@@ -48,6 +76,7 @@ pub struct Recognizer {
 }
 
 impl Recognizer {
+    /// Creates a new recognition engine, configured to listen to the default recording device.
     pub fn new() -> Result<Self> {
         let intf: ISpRecognizer =
             unsafe { CoCreateInstance(&SpInprocRecognizer, None, CLSCTX_ALL) }?;
@@ -59,10 +88,12 @@ impl Recognizer {
         })
     }
 
+    /// Configures the recognizer to listen to the given input.
     pub fn set_input(&self, input: RecognitionInput, allow_fmt_changes: bool) -> Result<()> {
         unsafe { self.intf.SetInput(input.to_sapi()?, allow_fmt_changes) }
     }
 
+    /// Enables or disables recognition.
     pub fn set_enabled(&self, enabled: bool) -> Result<()> {
         let mut global_pause = self.global_pause.lock().unwrap();
         if global_pause.is_none() != enabled {

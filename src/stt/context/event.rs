@@ -9,7 +9,9 @@ use crate::Result;
 
 use super::Context;
 
+/// The handler [`EventfulContext`] will call.
 pub trait EventHandler: Sync {
+    /// Called when the engine has successfully recognized a phrase.
     fn on_recognition(&self, phrase: Phrase);
 }
 
@@ -19,11 +21,15 @@ impl<F: Fn(Phrase) + Sync> EventHandler for F {
     }
 }
 
+/// A recognition context that calls the supplied event handler every time the engine recognizes a
+/// phrase in it.
 pub struct EventfulContext {
     base: Context,
 }
 
 impl EventfulContext {
+    /// Creates a new recognition context for the given recognizer, configured to call the given
+    /// handler whenever a phrase from this context is recognized.
     pub fn new<E: EventHandler + 'static>(recognizer: &Recognizer, handler: E) -> Result<Self> {
         let intf = unsafe { recognizer.intf.CreateRecoContext() }?;
         EventSink::new(EventSource::from_sapi(intf.cast()?), move |event| {

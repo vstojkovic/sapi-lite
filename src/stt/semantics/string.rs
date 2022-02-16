@@ -1,7 +1,9 @@
 use std::borrow::Cow;
 use std::ffi::{OsStr, OsString};
 
+/// A string type that can be borrowed as an [`OsStr`](std::ffi::OsStr).
 pub trait SemanticString {
+    /// Borrows the string as [`OsStr`](std::ffi::OsStr).
     fn as_os_str(&self) -> &OsStr;
 }
 

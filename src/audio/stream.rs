@@ -15,6 +15,7 @@ use crate::Result;
 
 use super::AudioFormat;
 
+/// An audio stream to read from or write to.
 pub struct AudioStream {
     intf: Intf<ISpStream>,
 }
@@ -23,14 +24,19 @@ pub struct AudioStream {
 const SPDFID_WaveFormatEx: GUID = GUID::from_u128(0xc31adbae_527f_4ff5_a230_f62bb61ff70c);
 
 impl AudioStream {
+    /// Opens the file at the given path and returns a read-only audio stream with the specified
+    /// format.
     pub fn open_file<P: AsRef<Path>>(path: P, format: &AudioFormat) -> Result<Self> {
         Self::from_file(path, format, SPFM_OPEN_READONLY)
     }
 
+    /// Creates an empty file at the given path and returns a writable audio stream with the
+    /// specified format.
     pub fn create_file<P: AsRef<Path>>(path: P, format: &AudioFormat) -> Result<Self> {
         Self::from_file(path, format, SPFM_CREATE_ALWAYS)
     }
 
+    /// Wraps a COM stream and returns an audio stream with the specified format.
     pub fn from_stream<S: Into<IStream>>(stream: S, format: &AudioFormat) -> Result<Self> {
         let intf: ISpStream = unsafe { CoCreateInstance(&SpStream, None, CLSCTX_ALL) }?;
         unsafe { intf.SetBaseStream(stream.into(), &SPDFID_WaveFormatEx, &format.to_sapi()) }?;
@@ -60,17 +66,21 @@ impl AudioStream {
     }
 }
 
+/// A data stream backed by a dynamically-sized memory buffer.
 pub struct MemoryStream {
     intf: Intf<IStream>,
 }
 
 impl MemoryStream {
+    /// Creates a new stream and initializes its content with a copy of the given data.
     pub fn new(init_data: Option<&[u8]>) -> Result<Self> {
         Ok(Self {
             intf: Intf(Self::create_stream(init_data)?),
         })
     }
 
+    /// If successful, returns a stream backed by the same memory buffer, but with its own
+    /// independent seek pointer.
     pub fn try_clone(&self) -> Result<Self> {
         unsafe { self.intf.Clone() }.map(|intf| Self {
             intf: Intf(intf),

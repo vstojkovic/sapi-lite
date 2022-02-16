@@ -9,14 +9,17 @@ use crate::Result;
 
 use super::SemanticTree;
 
+/// A successfully recognized phrase.
 #[derive(Debug, PartialEq, Clone)]
 pub struct Phrase {
+    /// The text of the recognized phrase.
     pub text: OsString,
+    /// The semantic information associated with the phrase.
     pub semantics: Vec<SemanticTree>,
 }
 
 impl Phrase {
-    // Note: must be a recognized phrase
+    // Note: must be a recognized phrase, not a hypothesis or a false recognition
     pub(crate) fn from_sapi(sapi_result: ISpRecoResult) -> Result<Self> {
         let text = unsafe {
             ComBox::from_raw(out_to_ret(|out| {
