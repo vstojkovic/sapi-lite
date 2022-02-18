@@ -28,10 +28,8 @@ impl AsyncContext {
     }
 
     /// Completes when the engine recognizes a phrase.
-    pub async fn recognize(&mut self) -> Option<Phrase> {
-        // TODO: There should be no way to disconnect the sender while AsyncContext is alive, so
-        // we might as well unwrap the result of recv()
-        self.rx.recv().await
+    pub async fn recognize(&mut self) -> Phrase {
+        self.rx.recv().await.unwrap()
     }
 }
 
