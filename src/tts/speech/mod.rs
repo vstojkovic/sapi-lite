@@ -45,3 +45,12 @@ impl<'s> From<String> for Speech<'s> {
         Self::Text(s.into())
     }
 }
+
+impl<'s> From<&'s Speech<'s>> for Speech<'s> {
+    fn from(s: &'s Speech<'s>) -> Self {
+        match s {
+            Speech::Text(s) => Self::Text(Cow::Borrowed(s.borrow())),
+            Speech::Xml(s) => Self::Xml(Cow::Borrowed(s.borrow())),
+        }
+    }
+}
