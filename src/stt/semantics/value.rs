@@ -1,4 +1,4 @@
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::mem::ManuallyDrop;
 
 use windows as Windows;
@@ -35,6 +35,51 @@ impl<S: SemanticString> SemanticValue<S> {
             Self::Float(f) => SemanticValue::Float(f),
             Self::Double(d) => SemanticValue::Double(d),
             Self::String(s) => SemanticValue::String(s.into()),
+        }
+    }
+
+    /// Borrows the underlying value, if this is a `SemanticValue::Bool`.
+    pub fn as_bool(&self) -> Option<&bool> {
+        if let Self::Bool(b) = self {
+            Some(b)
+        } else {
+            None
+        }
+    }
+
+    /// Borrows the underlying value, if this is a `SemanticValue::Int`.
+    pub fn as_int(&self) -> Option<&i32> {
+        if let Self::Int(i) = self {
+            Some(i)
+        } else {
+            None
+        }
+    }
+
+    /// Borrows the underlying value, if this is a `SemanticValue::Float`.
+    pub fn as_float(&self) -> Option<&f32> {
+        if let Self::Float(f) = self {
+            Some(f)
+        } else {
+            None
+        }
+    }
+
+    /// Borrows the underlying value, if this is a `SemanticValue::Double`.
+    pub fn as_double(&self) -> Option<&f64> {
+        if let Self::Double(d) = self {
+            Some(d)
+        } else {
+            None
+        }
+    }
+
+    /// Borrows the underlying value, if this is a `SemanticValue::String`.
+    pub fn as_string(&self) -> Option<&S> {
+        if let Self::String(s) = self {
+            Some(s)
+        } else {
+            None
         }
     }
 
@@ -120,6 +165,78 @@ impl<S: SemanticString> From<f64> for SemanticValue<S> {
 impl<F: SemanticString + Into<T>, T: SemanticString> From<F> for SemanticValue<T> {
     fn from(source: F) -> Self {
         Self::String(source.into())
+    }
+}
+
+impl<S: SemanticString> PartialEq<bool> for SemanticValue<S> {
+    fn eq(&self, other: &bool) -> bool {
+        self.as_bool().map(|value| value == other).unwrap_or(false)
+    }
+}
+
+impl<S: SemanticString> PartialEq<SemanticValue<S>> for bool {
+    fn eq(&self, other: &SemanticValue<S>) -> bool {
+        other.as_bool().map(|value| value == self).unwrap_or(false)
+    }
+}
+
+impl<S: SemanticString> PartialEq<i32> for SemanticValue<S> {
+    fn eq(&self, other: &i32) -> bool {
+        self.as_int().map(|value| value == other).unwrap_or(false)
+    }
+}
+
+impl<S: SemanticString> PartialEq<SemanticValue<S>> for i32 {
+    fn eq(&self, other: &SemanticValue<S>) -> bool {
+        other.as_int().map(|value| value == self).unwrap_or(false)
+    }
+}
+
+impl<S: SemanticString> PartialEq<f32> for SemanticValue<S> {
+    fn eq(&self, other: &f32) -> bool {
+        self.as_float().map(|value| value == other).unwrap_or(false)
+    }
+}
+
+impl<S: SemanticString> PartialEq<SemanticValue<S>> for f32 {
+    fn eq(&self, other: &SemanticValue<S>) -> bool {
+        other.as_float().map(|value| value == self).unwrap_or(false)
+    }
+}
+
+impl<S: SemanticString> PartialEq<f64> for SemanticValue<S> {
+    fn eq(&self, other: &f64) -> bool {
+        self.as_double().map(|value| value == other).unwrap_or(false)
+    }
+}
+
+impl<S: SemanticString> PartialEq<SemanticValue<S>> for f64 {
+    fn eq(&self, other: &SemanticValue<S>) -> bool {
+        other.as_double().map(|value| value == self).unwrap_or(false)
+    }
+}
+
+impl<S: SemanticString> PartialEq<&str> for SemanticValue<S> {
+    fn eq(&self, other: &&str) -> bool {
+        self.as_string().map(|value| value.as_os_str() == other.as_os_str()).unwrap_or(false)
+    }
+}
+
+impl<S: SemanticString> PartialEq<SemanticValue<S>> for &str {
+    fn eq(&self, other: &SemanticValue<S>) -> bool {
+        other.as_string().map(|value| value.as_os_str() == self.as_os_str()).unwrap_or(false)
+    }
+}
+
+impl<S: SemanticString> PartialEq<&OsStr> for SemanticValue<S> {
+    fn eq(&self, other: &&OsStr) -> bool {
+        self.as_string().map(|value| value.as_os_str() == *other).unwrap_or(false)
+    }
+}
+
+impl<S: SemanticString> PartialEq<SemanticValue<S>> for &OsStr {
+    fn eq(&self, other: &SemanticValue<S>) -> bool {
+        other.as_string().map(|value| value.as_os_str() == *self).unwrap_or(false)
     }
 }
 

@@ -1,4 +1,5 @@
 use std::ffi::OsString;
+use std::ops::{Deref, DerefMut};
 
 use windows as Windows;
 use Windows::Win32::Media::Speech::SPPHRASEPROPERTY;
@@ -28,5 +29,19 @@ impl SemanticTree {
             next_prop = unsafe { prop.pNextSibling.as_ref() };
         }
         result
+    }
+}
+
+impl Deref for SemanticTree {
+    type Target = Vec<SemanticTree>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.children
+    }
+}
+
+impl DerefMut for SemanticTree {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.children
     }
 }
