@@ -12,7 +12,7 @@ use super::{Pitch, Rate, SayAs, Speech, Volume};
 /// NOTE: Although any complex speech is encoded as XML, the builder performs no validation. This is
 /// because SAPI itself is very lax when processing speech. For example, SAPI will be perfectly
 /// happy to render the following XML:
-/// ```
+/// ```xml
 /// <emph><volume level="50">Hello</emph>world</volume>
 /// ```
 pub enum SpeechBuilder {

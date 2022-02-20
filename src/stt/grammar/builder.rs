@@ -21,6 +21,7 @@ use super::{grammar_state, rule_state, Grammar, RepeatRange, Rule};
 /// referenced by a top-level rule will not be recognized as phrases, unless they are also added as
 /// top-level rules. For example, consider the following top-level rule definition:
 /// ```
+/// # use sapi_lite::stt::Rule;
 /// Rule::sequence(vec![
 ///     &Rule::text("good"),
 ///     &Rule::choice(vec![
@@ -28,6 +29,7 @@ use super::{grammar_state, rule_state, Grammar, RepeatRange, Rule};
 ///         &Rule::text("evening"),
 ///     ])
 /// ])
+/// # ;
 /// ```
 /// Given this rule, the engine will only recognize the phrases "good morning" and "good evening",
 /// but not "good", "morning", or "evening".
