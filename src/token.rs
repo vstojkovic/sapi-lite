@@ -93,12 +93,17 @@ impl Category {
         })
     }
 
-    pub fn enum_tokens<S: AsRef<str>>(&self, req_attrs: S, opt_attrs: Option<S>) -> Result<Tokens> {
-        unsafe { self.intf.EnumTokens(req_attrs.as_ref(), opt_str_param(opt_attrs).abi()) }.map(
-            |intf| Tokens {
-                intf: Intf(intf),
-            },
-        )
+    pub fn enum_tokens<S: AsRef<str>>(
+        &self,
+        req_attrs: Option<S>,
+        opt_attrs: Option<S>,
+    ) -> Result<Tokens> {
+        unsafe {
+            self.intf.EnumTokens(opt_str_param(req_attrs).abi(), opt_str_param(opt_attrs).abi())
+        }
+        .map(|intf| Tokens {
+            intf: Intf(intf),
+        })
     }
 
     pub fn default_token(&self) -> Result<Token> {

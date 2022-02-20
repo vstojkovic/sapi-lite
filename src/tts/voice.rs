@@ -145,12 +145,14 @@ impl VoiceSelector {
 /// All returned voices will satisfy the `required` criteria. The voices that satisfy the
 /// `optional` criteria will be returned before the rest.
 pub fn installed_voices(
-    required: VoiceSelector,
+    required: Option<VoiceSelector>,
     optional: Option<VoiceSelector>,
 ) -> Result<impl Iterator<Item = Voice>> {
     let category = Category::new(r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices")?;
-    let tokens = category
-        .enum_tokens(required.into_sapi_expr(), optional.map(VoiceSelector::into_sapi_expr))?;
+    let tokens = category.enum_tokens(
+        required.map(VoiceSelector::into_sapi_expr),
+        optional.map(VoiceSelector::into_sapi_expr),
+    )?;
 
     Ok(tokens.map(|token| Voice {
         token,
