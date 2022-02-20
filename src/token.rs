@@ -49,9 +49,21 @@ impl<'p> IntoParam<'p, IUnknown> for Token {
     }
 }
 
+impl<'p> IntoParam<'p, IUnknown> for &'p Token {
+    fn into_param(self) -> Param<'p, IUnknown> {
+        (&self.intf).into_param()
+    }
+}
+
 impl<'p> IntoParam<'p, ISpObjectToken> for Token {
     fn into_param(self) -> Param<'p, ISpObjectToken> {
         self.intf.into_param()
+    }
+}
+
+impl<'p> IntoParam<'p, ISpObjectToken> for &'p Token {
+    fn into_param(self) -> Param<'p, ISpObjectToken> {
+        (&self.intf).into_param()
     }
 }
 

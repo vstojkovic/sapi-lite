@@ -73,8 +73,8 @@ impl Synthesizer {
     }
 
     /// Sets the default voice this synthesizer will use to render speech.
-    pub fn set_voice(&self, voice: Voice) -> Result<()> {
-        unsafe { self.intf.SetVoice(voice.token) }
+    pub fn set_voice(&self, voice: &Voice) -> Result<()> {
+        unsafe { self.intf.SetVoice(&voice.token) }
     }
 
     /// Sets the default speech volume for this synthesizer.
