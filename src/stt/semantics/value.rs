@@ -216,6 +216,18 @@ impl<S: SemanticString> PartialEq<SemanticValue<S>> for f64 {
     }
 }
 
+impl<S: SemanticString> PartialEq<str> for SemanticValue<S> {
+    fn eq(&self, other: &str) -> bool {
+        self.as_string().map(|value| value.as_os_str() == other.as_os_str()).unwrap_or(false)
+    }
+}
+
+impl<S: SemanticString> PartialEq<SemanticValue<S>> for str {
+    fn eq(&self, other: &SemanticValue<S>) -> bool {
+        other.as_string().map(|value| value.as_os_str() == self.as_os_str()).unwrap_or(false)
+    }
+}
+
 impl<S: SemanticString> PartialEq<&str> for SemanticValue<S> {
     fn eq(&self, other: &&str) -> bool {
         self.as_string().map(|value| value.as_os_str() == other.as_os_str()).unwrap_or(false)
@@ -225,6 +237,18 @@ impl<S: SemanticString> PartialEq<&str> for SemanticValue<S> {
 impl<S: SemanticString> PartialEq<SemanticValue<S>> for &str {
     fn eq(&self, other: &SemanticValue<S>) -> bool {
         other.as_string().map(|value| value.as_os_str() == self.as_os_str()).unwrap_or(false)
+    }
+}
+
+impl<S: SemanticString> PartialEq<OsStr> for SemanticValue<S> {
+    fn eq(&self, other: &OsStr) -> bool {
+        self.as_string().map(|value| value.as_os_str() == other).unwrap_or(false)
+    }
+}
+
+impl<S: SemanticString> PartialEq<SemanticValue<S>> for OsStr {
+    fn eq(&self, other: &SemanticValue<S>) -> bool {
+        other.as_string().map(|value| value.as_os_str() == self).unwrap_or(false)
     }
 }
 
