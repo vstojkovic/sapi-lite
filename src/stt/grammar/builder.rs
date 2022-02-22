@@ -50,6 +50,13 @@ impl<'a> GrammarBuilder<'a> {
         }
     }
 
+    /// Clears all the added rules.
+    pub fn clear(&mut self) -> &mut Self {
+        self.rule_names.clear();
+        self.top_rules.clear();
+        self
+    }
+
     /// Adds an unnamed top-level rule to the grammar.
     pub fn add_rule(&mut self, rule: &'a Rule<'a>) -> &mut Self {
         self.top_rules.insert(RuleRef(rule));
