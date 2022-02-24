@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use windows as Windows;
 use Windows::core::{Interface, IntoParam, Param};
 
-// A zero-cost wrapper that makes a COM interface Send and Sync
+/// A zero-cost wrapper that makes a COM interface Send and Sync.
 #[derive(Debug)]
 pub struct Intf<I: Interface>(pub I);
 

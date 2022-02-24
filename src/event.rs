@@ -8,7 +8,7 @@ use Windows::Win32::Media::Speech::{
     SPEVENT, SPEVENTENUM, SPEVENTLPARAMTYPE,
 };
 
-use crate::com_util::{next_elem, ComBox};
+use crate::com_util::{next_elem, ComBox, MaybeWeak};
 use crate::token::Token;
 use crate::Result;
 
@@ -56,21 +56,25 @@ impl Event {
 }
 
 pub(crate) struct EventSource {
-    intf: ISpEventSource,
+    intf: MaybeWeak<ISpEventSource>,
 }
 
 impl EventSource {
     pub(crate) fn from_sapi(intf: ISpEventSource) -> Self {
         Self {
-            intf,
+            intf: MaybeWeak::new(intf),
         }
     }
 
     pub(crate) fn next_event(&self) -> Result<Option<Event>> {
-        Ok(match unsafe { next_elem(&self.intf, ISpEventSource::GetEvents) }? {
+        Ok(match unsafe { next_elem(&*self.intf, ISpEventSource::GetEvents) }? {
             Some(sapi_event) => Some(Event::from_sapi(sapi_event)?),
             None => None,
         })
+    }
+
+    fn downgrade(&mut self) {
+        self.intf.set_weak(true);
     }
 }
 
@@ -93,9 +97,13 @@ impl EventSink {
     }
 
     pub(crate) fn install(self, interest: Option<&[SPEVENTENUM]>) -> Result<()> {
+        use windows::core::ToImpl;
+
         let src_intf = self.source.intf.clone();
         let sink_intf: ISpNotifySink = self.into();
-        unsafe { src_intf.SetNotifySink(sink_intf) }?;
+        unsafe { src_intf.SetNotifySink(&sink_intf) }?;
+        unsafe { Self::to_impl(&sink_intf) }.source.downgrade();
+
         if let Some(flags) = interest {
             let mut flags_arg = (1u64 << SPEI_RESERVED1.0) | (1u64 << SPEI_RESERVED2.0);
             for flag in flags {
