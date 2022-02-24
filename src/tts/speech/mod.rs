@@ -1,7 +1,7 @@
 use std::borrow::{Borrow, Cow};
 
 use windows as Windows;
-use Windows::Win32::Media::Speech::{SPF_DEFAULT, SPF_IS_XML, SPF_PARSE_SAPI};
+use Windows::Win32::Media::Speech::{SPF_IS_NOT_XML, SPF_IS_XML, SPF_PARSE_SAPI};
 
 mod builder;
 mod types;
@@ -21,7 +21,7 @@ pub enum Speech<'s> {
 impl<'s> Speech<'s> {
     pub(crate) fn flags(&self) -> u32 {
         (match self {
-            Self::Text(_) => SPF_DEFAULT.0,
+            Self::Text(_) => SPF_IS_NOT_XML.0,
             Self::Xml(_) => (SPF_IS_XML.0 | SPF_PARSE_SAPI.0),
         }) as u32
     }
