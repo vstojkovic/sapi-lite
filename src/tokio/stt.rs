@@ -65,7 +65,7 @@ impl UnicastContext {
             },
             UnicastSubscriber {
                 rx,
-            }
+            },
         ))
     }
 }
@@ -94,7 +94,7 @@ impl BroadcastContext {
         let handler = {
             let tx = tx.clone();
             move |phrase| {
-               let _ = tx.send(phrase);
+                let _ = tx.send(phrase);
             }
         };
         Ok((

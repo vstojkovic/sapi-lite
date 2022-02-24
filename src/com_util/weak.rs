@@ -1,8 +1,8 @@
-use std::mem::{ManuallyDrop, transmute_copy};
+use std::mem::{transmute_copy, ManuallyDrop};
 use std::ops::{Deref, DerefMut};
 
 use windows as Windows;
-use Windows::core::{Interface, IntoParam, Param, IUnknown};
+use Windows::core::{IUnknown, Interface, IntoParam, Param};
 
 /// An incredibly dangerous wrapper around COM interface that should be used to avoid circular
 /// references, and only when you're sure that the target will be valid for at least as long as
@@ -46,23 +46,21 @@ impl<I: Interface> MaybeWeak<I> {
 
     fn add_ref(&self) {
         let intf = &*self.intf;
-        unsafe {
-            Interface::assume_vtable::<IUnknown>(intf).1(transmute_copy(intf))
-        };
+        unsafe { Interface::assume_vtable::<IUnknown>(intf).1(transmute_copy(intf)) };
     }
 
     fn release(&self) {
         let intf = &*self.intf;
-        unsafe {
-            Interface::assume_vtable::<IUnknown>(intf).2(transmute_copy(intf))
-        };
+        unsafe { Interface::assume_vtable::<IUnknown>(intf).2(transmute_copy(intf)) };
     }
 }
 
 impl<I: Interface> Drop for MaybeWeak<I> {
     fn drop(&mut self) {
         if !self.is_weak {
-            unsafe { ManuallyDrop::drop(&mut self.intf); }
+            unsafe {
+                ManuallyDrop::drop(&mut self.intf);
+            }
         }
     }
 }
