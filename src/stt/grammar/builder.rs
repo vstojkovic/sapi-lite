@@ -4,6 +4,7 @@ use std::hash::Hash;
 use std::mem::ManuallyDrop;
 use std::ptr::{null, null_mut};
 
+use windows::core::HRESULT;
 use windows::Win32::Media::Speech::{
     ISpRecoContext, ISpRecoGrammar, SPRAF_Active, SPRAF_TopLevel, SPSTATEHANDLE__, SPWT_LEXICAL,
 };
@@ -117,6 +118,9 @@ impl<'a> Hash for RuleRef<'a> {
 
 type State = *mut SPSTATEHANDLE__;
 
+// SPERR_ constants are absent from the windows crate
+const SPERR_STATE_WITH_NO_ARCS: HRESULT = HRESULT(0x80045062);
+
 struct RecursiveRuleBuilder<'a, 'b> {
     intf: ISpRecoGrammar,
     owner: &'b GrammarBuilder<'a>,
@@ -166,6 +170,11 @@ impl<'a, 'b> RecursiveRuleBuilder<'a, 'b> {
     }
 
     fn build_choice(&mut self, init_state: State, options: &Cow<'a, [&Rule<'a>]>) -> Result<()> {
+        // This is what SAPI should do, but instead it causes an access violation on my machine
+        if options.is_empty() {
+            return Err(SPERR_STATE_WITH_NO_ARCS.into());
+        }
+
         for option in options.iter() {
             let child_state = self.build_rule(option)?;
             self.rule_arc(init_state, null_mut(), child_state, None)?;
@@ -174,6 +183,11 @@ impl<'a, 'b> RecursiveRuleBuilder<'a, 'b> {
     }
 
     fn build_sequence(&mut self, init_state: State, parts: &Cow<'a, [&'a Rule<'a>]>) -> Result<()> {
+        // This is what SAPI should do, but instead it causes an access violation on my machine
+        if parts.is_empty() {
+            return Err(SPERR_STATE_WITH_NO_ARCS.into());
+        }
+
         let mut part_iter = parts.iter().peekable();
         let mut prev_state = init_state;
         while let Some(part) = part_iter.next() {
