@@ -21,15 +21,11 @@ impl Token {
     pub fn new<'s, S: IntoParam<'s, PWSTR>>(id: S) -> Result<Self> {
         let intf: ISpObjectToken = unsafe { CoCreateInstance(&SpObjectToken, None, CLSCTX_ALL) }?;
         unsafe { intf.SetId(None, id, false) }?;
-        Ok(Token {
-            intf: Intf(intf),
-        })
+        Ok(Token { intf: Intf(intf) })
     }
 
     pub fn from_sapi(intf: ISpObjectToken) -> Self {
-        Token {
-            intf: Intf(intf),
-        }
+        Token { intf: Intf(intf) }
     }
 
     pub fn to_sapi(self) -> ISpObjectToken {
@@ -75,7 +71,9 @@ impl Iterator for Tokens {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
-        unsafe { next_obj(&self.intf.0, IEnumSpObjectTokens::Next) }.ok()?.map(Token::from_sapi)
+        unsafe { next_obj(&self.intf.0, IEnumSpObjectTokens::Next) }
+            .ok()?
+            .map(Token::from_sapi)
     }
 }
 
@@ -88,9 +86,7 @@ impl Category {
         let intf: ISpObjectTokenCategory =
             unsafe { CoCreateInstance(&SpObjectTokenCategory, None, CLSCTX_ALL) }?;
         unsafe { intf.SetId(id, false) }?;
-        Ok(Self {
-            intf: Intf(intf),
-        })
+        Ok(Self { intf: Intf(intf) })
     }
 
     pub fn enum_tokens<S: AsRef<str>>(
@@ -99,11 +95,12 @@ impl Category {
         opt_attrs: Option<S>,
     ) -> Result<Tokens> {
         unsafe {
-            self.intf.EnumTokens(opt_str_param(req_attrs).abi(), opt_str_param(opt_attrs).abi())
+            self.intf.EnumTokens(
+                opt_str_param(req_attrs).abi(),
+                opt_str_param(opt_attrs).abi(),
+            )
         }
-        .map(|intf| Tokens {
-            intf: Intf(intf),
-        })
+        .map(|intf| Tokens { intf: Intf(intf) })
     }
 
     pub fn default_token(&self) -> Result<Token> {

@@ -20,11 +20,17 @@ fn test_round_trip() {
     let stream = MemoryStream::new(None).unwrap();
     let speech = "have a very very good evening";
 
-    let timeout = speak(speech, create_output(stream.try_clone().unwrap(), &audio_fmt));
+    let timeout = speak(
+        speech,
+        create_output(stream.try_clone().unwrap(), &audio_fmt),
+    );
     let phrase = recognize(create_input(stream, &audio_fmt), timeout).unwrap();
 
     assert_eq!(speech, phrase.text);
-    assert_eq!(vec![tree("how_good", vec![leaf(1), leaf(1)]), leaf("pm"),], phrase.semantics);
+    assert_eq!(
+        vec![tree("how_good", vec![leaf(1), leaf(1)]), leaf("pm")],
+        phrase.semantics
+    );
 
     sapi_lite::finalize();
 }

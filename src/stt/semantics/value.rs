@@ -104,17 +104,13 @@ impl<S: SemanticString> SemanticValue<S> {
     fn to_variant_union(&self) -> VARIANT_0_0_0 {
         match self {
             SemanticValue::Bool(b) => VARIANT_0_0_0 {
+                // per https://docs.microsoft.com/en-us/windows/win32/api/oaidl/ns-oaidl-variant
+                // 0 is false and 0xffff is true
                 boolVal: -(*b as i16),
             },
-            SemanticValue::Int(i) => VARIANT_0_0_0 {
-                lVal: *i,
-            },
-            SemanticValue::Float(f) => VARIANT_0_0_0 {
-                fltVal: *f,
-            },
-            SemanticValue::Double(d) => VARIANT_0_0_0 {
-                dblVal: *d,
-            },
+            SemanticValue::Int(i) => VARIANT_0_0_0 { lVal: *i },
+            SemanticValue::Float(f) => VARIANT_0_0_0 { fltVal: *f },
+            SemanticValue::Double(d) => VARIANT_0_0_0 { dblVal: *d },
             SemanticValue::String(_) => Default::default(),
         }
     }
@@ -123,7 +119,9 @@ impl<S: SemanticString> SemanticValue<S> {
 impl SemanticValue<OsString> {
     pub(super) fn from_sapi(property: &SPPHRASEPROPERTY) -> Result<Self, VARENUM> {
         if !property.pszValue.is_null() {
-            Ok(Self::String(unsafe { from_wide(&property.pszValue) }.into()))
+            Ok(Self::String(
+                unsafe { from_wide(&property.pszValue) }.into(),
+            ))
         } else {
             let var_type = unsafe { property.vValue.Anonymous.Anonymous.vt };
             let var_value = unsafe { &property.vValue.Anonymous.Anonymous.Anonymous };
@@ -206,61 +204,86 @@ impl<S: SemanticString> PartialEq<SemanticValue<S>> for f32 {
 
 impl<S: SemanticString> PartialEq<f64> for SemanticValue<S> {
     fn eq(&self, other: &f64) -> bool {
-        self.as_double().map(|value| value == other).unwrap_or(false)
+        self.as_double()
+            .map(|value| value == other)
+            .unwrap_or(false)
     }
 }
 
 impl<S: SemanticString> PartialEq<SemanticValue<S>> for f64 {
     fn eq(&self, other: &SemanticValue<S>) -> bool {
-        other.as_double().map(|value| value == self).unwrap_or(false)
+        other
+            .as_double()
+            .map(|value| value == self)
+            .unwrap_or(false)
     }
 }
 
 impl<S: SemanticString> PartialEq<str> for SemanticValue<S> {
     fn eq(&self, other: &str) -> bool {
-        self.as_string().map(|value| value.as_os_str() == other.as_os_str()).unwrap_or(false)
+        self.as_string()
+            .map(|value| value.as_os_str() == other.as_os_str())
+            .unwrap_or(false)
     }
 }
 
 impl<S: SemanticString> PartialEq<SemanticValue<S>> for str {
     fn eq(&self, other: &SemanticValue<S>) -> bool {
-        other.as_string().map(|value| value.as_os_str() == self.as_os_str()).unwrap_or(false)
+        other
+            .as_string()
+            .map(|value| value.as_os_str() == self.as_os_str())
+            .unwrap_or(false)
     }
 }
 
 impl<S: SemanticString> PartialEq<&str> for SemanticValue<S> {
     fn eq(&self, other: &&str) -> bool {
-        self.as_string().map(|value| value.as_os_str() == other.as_os_str()).unwrap_or(false)
+        self.as_string()
+            .map(|value| value.as_os_str() == other.as_os_str())
+            .unwrap_or(false)
     }
 }
 
 impl<S: SemanticString> PartialEq<SemanticValue<S>> for &str {
     fn eq(&self, other: &SemanticValue<S>) -> bool {
-        other.as_string().map(|value| value.as_os_str() == self.as_os_str()).unwrap_or(false)
+        other
+            .as_string()
+            .map(|value| value.as_os_str() == self.as_os_str())
+            .unwrap_or(false)
     }
 }
 
 impl<S: SemanticString> PartialEq<OsStr> for SemanticValue<S> {
     fn eq(&self, other: &OsStr) -> bool {
-        self.as_string().map(|value| value.as_os_str() == other).unwrap_or(false)
+        self.as_string()
+            .map(|value| value.as_os_str() == other)
+            .unwrap_or(false)
     }
 }
 
 impl<S: SemanticString> PartialEq<SemanticValue<S>> for OsStr {
     fn eq(&self, other: &SemanticValue<S>) -> bool {
-        other.as_string().map(|value| value.as_os_str() == self).unwrap_or(false)
+        other
+            .as_string()
+            .map(|value| value.as_os_str() == self)
+            .unwrap_or(false)
     }
 }
 
 impl<S: SemanticString> PartialEq<&OsStr> for SemanticValue<S> {
     fn eq(&self, other: &&OsStr) -> bool {
-        self.as_string().map(|value| value.as_os_str() == *other).unwrap_or(false)
+        self.as_string()
+            .map(|value| value.as_os_str() == *other)
+            .unwrap_or(false)
     }
 }
 
 impl<S: SemanticString> PartialEq<SemanticValue<S>> for &OsStr {
     fn eq(&self, other: &SemanticValue<S>) -> bool {
-        other.as_string().map(|value| value.as_os_str() == *self).unwrap_or(false)
+        other
+            .as_string()
+            .map(|value| value.as_os_str() == *self)
+            .unwrap_or(false)
     }
 }
 

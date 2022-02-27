@@ -167,9 +167,7 @@ impl ScopedPause {
         {
             state.lock().unwrap().pause()?;
         }
-        Ok(Self {
-            state,
-        })
+        Ok(Self { state })
     }
 }
 

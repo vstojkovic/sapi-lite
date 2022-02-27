@@ -40,9 +40,7 @@ impl AudioStream {
     pub fn from_stream<S: Into<IStream>>(stream: S, format: &AudioFormat) -> Result<Self> {
         let intf: ISpStream = unsafe { CoCreateInstance(&SpStream, None, CLSCTX_ALL) }?;
         unsafe { intf.SetBaseStream(stream.into(), &SPDFID_WaveFormatEx, &format.to_sapi()) }?;
-        Ok(Self {
-            intf: Intf(intf),
-        })
+        Ok(Self { intf: Intf(intf) })
     }
 
     fn from_file<P: AsRef<Path>>(path: P, format: &AudioFormat, mode: SPFILEMODE) -> Result<Self> {
@@ -56,9 +54,7 @@ impl AudioStream {
                 0,
             )
         }?;
-        Ok(AudioStream {
-            intf: Intf(intf),
-        })
+        Ok(AudioStream { intf: Intf(intf) })
     }
 
     pub(crate) fn to_sapi(&self) -> ISpStream {
@@ -82,14 +78,15 @@ impl MemoryStream {
     /// If successful, returns a stream backed by the same memory buffer, but with its own
     /// independent seek pointer.
     pub fn try_clone(&self) -> Result<Self> {
-        unsafe { self.intf.Clone() }.map(|intf| Self {
-            intf: Intf(intf),
-        })
+        unsafe { self.intf.Clone() }.map(|intf| Self { intf: Intf(intf) })
     }
 
     fn create_stream(init_data: Option<&[u8]>) -> std::result::Result<IStream, HRESULT> {
-        let size =
-            init_data.map(|buf| buf.len()).unwrap_or(0).try_into().map_err(|_| E_OUTOFMEMORY)?;
+        let size = init_data
+            .map(|buf| buf.len())
+            .unwrap_or(0)
+            .try_into()
+            .map_err(|_| E_OUTOFMEMORY)?;
         unsafe { SHCreateMemStream(init_data.map(|buf| buf.as_ptr()).unwrap_or(null()), size) }
             .ok_or(E_OUTOFMEMORY)
     }

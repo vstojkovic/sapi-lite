@@ -63,9 +63,7 @@ impl UnicastContext {
             Self {
                 base: EventfulContext::new(recognizer, handler)?,
             },
-            UnicastSubscriber {
-                rx,
-            },
+            UnicastSubscriber { rx },
         ))
     }
 }
@@ -102,9 +100,7 @@ impl BroadcastContext {
                 base: EventfulContext::new(recognizer, handler)?,
                 tx,
             },
-            BroadcastSubscriber {
-                rx,
-            },
+            BroadcastSubscriber { rx },
         ))
     }
 

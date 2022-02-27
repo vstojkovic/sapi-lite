@@ -40,9 +40,7 @@ impl EventfulSynthesizer {
             Ok(())
         })
         .install(Some(&[SPEI_END_INPUT_STREAM]))?;
-        Ok(Self {
-            base,
-        })
+        Ok(Self { base })
     }
 
     /// Schedules the rendering of the given speech and returns a numeric identifier for it. The

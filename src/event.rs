@@ -40,9 +40,9 @@ impl Event {
             SPET_LPARAM_IS_POINTER => {
                 Ok(Self::OtherValue(unsafe { ComBox::from_raw(lparam as _) }))
             }
-            SPET_LPARAM_IS_STRING => {
-                Ok(Self::OtherString(unsafe { ComBox::from_raw(PWSTR(lparam as _)) }))
-            }
+            SPET_LPARAM_IS_STRING => Ok(Self::OtherString(unsafe {
+                ComBox::from_raw(PWSTR(lparam as _))
+            })),
             SPET_LPARAM_IS_TOKEN => Ok(Self::OtherToken(Token::from_sapi(unsafe {
                 ISpObjectToken::from_abi(lparam as _)
             }?))),
@@ -67,10 +67,12 @@ impl EventSource {
     }
 
     pub(crate) fn next_event(&self) -> Result<Option<Event>> {
-        Ok(match unsafe { next_elem(&*self.intf, ISpEventSource::GetEvents) }? {
-            Some(sapi_event) => Some(Event::from_sapi(sapi_event)?),
-            None => None,
-        })
+        Ok(
+            match unsafe { next_elem(&*self.intf, ISpEventSource::GetEvents) }? {
+                Some(sapi_event) => Some(Event::from_sapi(sapi_event)?),
+                None => None,
+            },
+        )
     }
 
     fn downgrade(&mut self) {

@@ -31,9 +31,11 @@ impl SyncSynthesizer {
     ) -> Result<()> {
         self.base.speak(speech, SPF_ASYNC.0 as _)?;
         unsafe {
-            self.base
-                .intf
-                .WaitUntilDone(timeout.map(|dur| dur.as_millis() as u32).unwrap_or(INFINITE))
+            self.base.intf.WaitUntilDone(
+                timeout
+                    .map(|dur| dur.as_millis() as u32)
+                    .unwrap_or(INFINITE),
+            )
         }
     }
 }

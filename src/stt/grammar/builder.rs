@@ -248,7 +248,8 @@ impl<'a, 'b> RecursiveRuleBuilder<'a, 'b> {
 
     fn text_arc(&mut self, from_state: State, to_state: State, text: &str) -> Result<()> {
         unsafe {
-            self.intf.AddWordTransition(from_state, to_state, text, " ", SPWT_LEXICAL, 1.0, null())
+            self.intf
+                .AddWordTransition(from_state, to_state, text, " ", SPWT_LEXICAL, 1.0, null())
         }
     }
 
@@ -263,12 +264,16 @@ impl<'a, 'b> RecursiveRuleBuilder<'a, 'b> {
             Some(prop) => &prop.info,
             None => null(),
         };
-        unsafe { self.intf.AddRuleTransition(from_state, to_state, child_state, 1.0, prop_ptr) }
+        unsafe {
+            self.intf
+                .AddRuleTransition(from_state, to_state, child_state, 1.0, prop_ptr)
+        }
     }
 
     fn epsilon_arc(&mut self, from_state: State, to_state: State) -> Result<()> {
         unsafe {
-            self.intf.AddWordTransition(from_state, to_state, None, None, SPWT_LEXICAL, 1.0, null())
+            self.intf
+                .AddWordTransition(from_state, to_state, None, None, SPWT_LEXICAL, 1.0, null())
         }
     }
 }

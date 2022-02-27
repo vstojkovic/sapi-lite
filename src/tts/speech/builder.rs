@@ -43,7 +43,9 @@ impl SpeechBuilder {
     /// [`end_pitch`](SpeechBuilder::end_pitch) call.
     pub fn start_pitch<P: Into<Pitch>>(&mut self, pitch: P) -> &mut Self {
         self.append_xml(
-            XmlEvent::start_element("pitch").attr("absmiddle", &pitch.into().to_string()).into(),
+            XmlEvent::start_element("pitch")
+                .attr("absmiddle", &pitch.into().to_string())
+                .into(),
         )
     }
 
@@ -51,7 +53,9 @@ impl SpeechBuilder {
     /// [`end_rate`](SpeechBuilder::end_rate) call.
     pub fn start_rate<R: Into<Rate>>(&mut self, rate: R) -> &mut Self {
         self.append_xml(
-            XmlEvent::start_element("rate").attr("absspeed", &rate.into().to_string()).into(),
+            XmlEvent::start_element("rate")
+                .attr("absspeed", &rate.into().to_string())
+                .into(),
         )
     }
 
@@ -94,7 +98,9 @@ impl SpeechBuilder {
     /// [`end_rate`](SpeechBuilder::end_rate) call.
     pub fn start_volume<V: Into<Volume>>(&mut self, volume: V) -> &mut Self {
         self.append_xml(
-            XmlEvent::start_element("volume").attr("level", &volume.into().to_string()).into(),
+            XmlEvent::start_element("volume")
+                .attr("level", &volume.into().to_string())
+                .into(),
         )
     }
 
@@ -114,17 +120,25 @@ impl SpeechBuilder {
 
     /// Appends text to pronounce, along witha hint on how to pronounce it.
     pub fn say_as<S: AsRef<str>>(&mut self, text: S, ctx: SayAs) -> &mut Self {
-        self.append_xml(XmlEvent::start_element("context").attr("id", ctx.sapi_id()).into())
-            .say(text)
-            .end_element("context")
+        self.append_xml(
+            XmlEvent::start_element("context")
+                .attr("id", ctx.sapi_id())
+                .into(),
+        )
+        .say(text)
+        .end_element("context")
     }
 
     /// Appends a specific pronunciation to render. The pronunciation specification depends on the
     /// language of the current voice. For example, "m ah dh ax r" in American English is pronounced
     /// as "mother".
     pub fn pronounce<S: AsRef<str>>(&mut self, pronunciation: S) -> &mut Self {
-        self.append_xml(XmlEvent::start_element("pron").attr("sym", pronunciation.as_ref()).into())
-            .end_element("pron")
+        self.append_xml(
+            XmlEvent::start_element("pron")
+                .attr("sym", pronunciation.as_ref())
+                .into(),
+        )
+        .end_element("pron")
     }
 
     /// Appends a silence with a specified duration. Does not support sub-millisecond precision.
@@ -134,8 +148,12 @@ impl SpeechBuilder {
             return self;
         }
 
-        self.append_xml(XmlEvent::start_element("silence").attr("msec", &millis.to_string()).into())
-            .end_element("silence")
+        self.append_xml(
+            XmlEvent::start_element("silence")
+                .attr("msec", &millis.to_string())
+                .into(),
+        )
+        .end_element("silence")
     }
 
     /// Ends the effect of the corresponding [`start_emphasis`](SpeechBuilder::start_emphasis) call.

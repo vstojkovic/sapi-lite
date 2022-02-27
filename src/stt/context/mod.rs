@@ -28,11 +28,7 @@ impl Context {
 
     /// Enables or disables the recognition of rules from all grammars loaded into this context.
     pub fn set_enabled(&self, enabled: bool) -> Result<()> {
-        let state = if enabled {
-            SPCS_ENABLED
-        } else {
-            SPCS_DISABLED
-        };
+        let state = if enabled { SPCS_ENABLED } else { SPCS_DISABLED };
         unsafe { self.intf.SetContextState(state) }
     }
 

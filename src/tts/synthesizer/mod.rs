@@ -40,9 +40,8 @@ pub struct Synthesizer {
 
 impl Synthesizer {
     fn new() -> Result<Self> {
-        unsafe { CoCreateInstance(&SpVoice, None, CLSCTX_ALL) }.map(|intf| Self {
-            intf: Intf(intf),
-        })
+        unsafe { CoCreateInstance(&SpVoice, None, CLSCTX_ALL) }
+            .map(|intf| Self { intf: Intf(intf) })
     }
 
     /// Configures the synthesizer to render its speech to the given output destination.
@@ -84,6 +83,9 @@ impl Synthesizer {
 
     fn speak<'s, S: Into<Speech<'s>>>(&self, speech: S, base_flags: u32) -> Result<u32> {
         let speech = speech.into();
-        unsafe { self.intf.Speak(speech.contents(), speech.flags() | base_flags) }
+        unsafe {
+            self.intf
+                .Speak(speech.contents(), speech.flags() | base_flags)
+        }
     }
 }

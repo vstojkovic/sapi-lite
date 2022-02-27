@@ -154,7 +154,5 @@ pub fn installed_voices(
         optional.map(VoiceSelector::into_sapi_expr),
     )?;
 
-    Ok(tokens.map(|token| Voice {
-        token,
-    }))
+    Ok(tokens.map(|token| Voice { token }))
 }
