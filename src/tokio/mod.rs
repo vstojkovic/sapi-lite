@@ -11,6 +11,8 @@ mod tts;
 #[cfg(feature = "tokio-rt")]
 pub use rt::BuilderExt;
 #[cfg(feature = "tokio-stt")]
-pub use stt::{BroadcastContext, BroadcastSubscriber, UnicastContext, UnicastSubscriber};
+pub use stt::{
+    BroadcastContext, BroadcastResult, BroadcastSubscriber, UnicastContext, UnicastSubscriber,
+};
 #[cfg(feature = "tokio-tts")]
 pub use tts::AsyncSynthesizer;

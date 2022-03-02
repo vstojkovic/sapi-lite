@@ -23,7 +23,9 @@ impl UnicastSubscriber {
 #[cfg_attr(docsrs, doc(cfg(feature = "tokio-stt")))]
 #[derive(Debug, Clone, PartialEq)]
 pub enum BroadcastResult {
+    /// Holds a phrase that has been recognized
     Phrase(Phrase),
+    /// Indicates how many phrases have been skipped because the subscriber lagged too far behind
     Lagged(u64),
 }
 
