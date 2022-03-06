@@ -16,7 +16,7 @@ mod builder;
 mod rule;
 
 pub use builder::GrammarBuilder;
-pub use rule::{RepeatRange, Rule};
+pub use rule::{RepeatRange, Rule, RuleArena};
 
 /// A set of rules that define phrases that can be recognized.
 pub struct Grammar {

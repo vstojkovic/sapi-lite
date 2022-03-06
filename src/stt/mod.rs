@@ -42,7 +42,7 @@ mod phrase;
 mod semantics;
 
 pub use context::{Context, EventHandler, EventfulContext, SyncContext};
-pub use grammar::{Grammar, GrammarBuilder, RepeatRange, Rule};
+pub use grammar::{Grammar, GrammarBuilder, RepeatRange, Rule, RuleArena};
 pub use phrase::Phrase;
 pub use semantics::{SemanticString, SemanticTree, SemanticValue};
 

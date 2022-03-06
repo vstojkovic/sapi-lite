@@ -3,6 +3,10 @@ use std::ops::{RangeInclusive, RangeToInclusive};
 
 use crate::stt::SemanticValue;
 
+mod arena;
+
+pub use arena::RuleArena;
+
 /// A rule that defines one or more phrases or fragments that can be recognized by the engine.
 #[derive(Debug)]
 pub enum Rule<'a> {
