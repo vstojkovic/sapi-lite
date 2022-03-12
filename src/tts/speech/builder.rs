@@ -10,6 +10,11 @@ use super::{Pitch, Rate, SayAs, Speech, Volume};
 
 /// Helper type that can construct a [`Speech`] from a sequence of rendering instructions.
 ///
+/// It's important to understand that the instructions do not override the configuration of the
+/// synthesizer, but adjust them instead. For example, if you call `set_volume(80)` on the
+/// synthesizer, and your speech starts with the instruction `start_volume(50)`, the volume at that
+/// point will be set to 40 (i.e. 50% of 80%).
+///
 /// NOTE: Although any complex speech is encoded as XML, the builder performs no validation. This is
 /// because SAPI itself is very lax when processing speech. For example, SAPI will be perfectly
 /// happy to render the following XML:
