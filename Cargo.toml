@@ -1,7 +1,15 @@
 [package]
 name = "sapi-lite"
 version = "0.1.0"
+authors = ["Vojislav Stojkovic <zinthys@gmail.com>"]
 edition = "2021"
+
+description = "A simplified wrapper around Microsoft's Speech API (SAPI) library"
+readme = "README.md"
+license = "Apache-2.0"
+keywords = ["speech", "tts", "sapi", "microsoft", "windows"]
+
+repository = "https://github.com/vstojkovic/sapi-lite"
 
 [features]
 default = []
