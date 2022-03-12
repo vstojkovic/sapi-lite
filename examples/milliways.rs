@@ -84,7 +84,7 @@ async fn tokio_main() -> Result<(), Box<dyn Error>> {
                     .to_string_lossy()
                     .to_string();
                 // Serve the menu item to the guest.
-                restaurant.serve_item(MENU[item], guest_name).await;
+                restaurant.serve_item(MENU[item], guest_name);
             },
             _ = tokio::signal::ctrl_c() => {
                 break;
@@ -162,7 +162,7 @@ impl Restaurant {
     }
 
     /// Find the guest with the given name and, if present, send the item over their channel.
-    async fn serve_item(&self, item: &'static str, name: String) {
+    fn serve_item(&self, item: &'static str, name: String) {
         let mut speech = SpeechBuilder::new();
         {
             let guests = self.guests.lock().unwrap();
@@ -180,7 +180,7 @@ impl Restaurant {
         }
 
         // Announce the outcome.
-        self.synthesizer.speak(speech).await.unwrap();
+        self.synthesizer.speak_and_forget(speech).unwrap();
     }
 
     /// Update the recognition grammar to reflect the list of guests.

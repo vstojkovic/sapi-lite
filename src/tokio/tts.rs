@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 
-use tokio::sync::oneshot::{channel, Sender};
+use tokio::sync::oneshot::{channel, Receiver, Sender};
 
 use crate::tts::{EventfulSynthesizer, Speech, Synthesizer};
 use crate::Result;
@@ -43,17 +43,30 @@ impl AsyncSynthesizer {
     /// Completes when the synthesizer finished rendering the given speech.
     pub async fn speak<'s, S: Into<Speech<'s>>>(&self, speech: S) -> Result<()> {
         let id = self.base.speak(speech)?;
-        let rx = {
-            let mut map = self.pending_speeches.lock().unwrap();
-            if let Some(PendingSpeech::Finished) = map.remove(&id) {
-                return Ok(());
-            }
-            let (tx, rx) = channel();
-            map.insert(id, PendingSpeech::Waiting(tx));
-            rx
-        };
-        let _ = rx.await;
+        if let Some(rx) = self.awaiter_for_speech_id(id) {
+            let _ = rx.await;
+        }
         Ok(())
+    }
+
+    /// Queues up the rendering of the given speech and forgets about it.
+    ///
+    /// Note that this function can be used from both async and synchronous code. The speech will
+    /// be rendered, but there is no way to await its completion.
+    pub fn speak_and_forget<'s, S: Into<Speech<'s>>>(&self, speech: S) -> Result<()> {
+        let id = self.base.speak(speech)?;
+        let _ = self.awaiter_for_speech_id(id);
+        Ok(())
+    }
+
+    fn awaiter_for_speech_id(&self, id: u32) -> Option<Receiver<()>> {
+        let mut map = self.pending_speeches.lock().unwrap();
+        if let Some(PendingSpeech::Finished) = map.remove(&id) {
+            return None;
+        }
+        let (tx, rx) = channel();
+        map.insert(id, PendingSpeech::Waiting(tx));
+        Some(rx)
     }
 }
 
