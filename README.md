@@ -18,8 +18,8 @@ sapi_lite::initialize().unwrap();
 
 let synth = SyncSynthesizer::new().unwrap();
 synth
-	.speak("The Doors of Durin, Lord of Moria. Speak, friend, and enter.", None)
-	.unwrap();
+    .speak("The Doors of Durin, Lord of Moria. Speak, friend, and enter.", None)
+    .unwrap();
 
 let recog = Recognizer::new().unwrap();
 let ctx = SyncContext::new(&recog).unwrap();
