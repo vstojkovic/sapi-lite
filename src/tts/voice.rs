@@ -3,6 +3,7 @@ use std::str::FromStr;
 
 use strum_macros::{EnumString, IntoStaticStr};
 
+use crate::com_util::Locale;
 use crate::token::{Category, Token};
 use crate::Result;
 
@@ -60,7 +61,9 @@ impl Voice {
 
     /// Returns the language of this voice.
     pub fn language(&self) -> Option<OsString> {
-        self.token.attr("language").ok()
+        let lcid = self.token.attr("language").ok()?;
+        let lcid = u32::from_str_radix(lcid.to_str()?, 16).ok()?;
+        Some(Locale::new(lcid).name())
     }
 }
 
@@ -116,13 +119,21 @@ impl VoiceSelector {
     /// Returns a selector that requires the voice to have the given language, along with all the
     /// previously specified conditions.
     pub fn language_eq<S: AsRef<str>>(self, language: S) -> Self {
-        self.append_condition("language=", language.as_ref())
+        if let Ok(locale) = language.as_ref().parse::<Locale>() {
+            self.append_condition("language=", &format!("{:X}", locale.lcid()))
+        } else {
+            self
+        }
     }
 
     /// Returns a selector that requires the voice to have a language different from the one given
     /// here, along with all the previously specified conditions.
     pub fn language_ne<S: AsRef<str>>(self, language: S) -> Self {
-        self.append_condition("language!=", language.as_ref())
+        if let Ok(locale) = language.as_ref().parse::<Locale>() {
+            self.append_condition("language!=", &format!("{:X}", locale.lcid()))
+        } else {
+            self
+        }
     }
 
     fn append_condition(mut self, prefix: &str, val: &str) -> Self {

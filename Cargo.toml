@@ -16,8 +16,9 @@ strum_macros = "0.23"
 tokio = { version = "1.16", optional = true }
 typed-arena = "2.0.1"
 windows = { version = "0.28", features = [
-    "alloc", "build", "std", "Win32_Foundation", "Win32_Media_Audio", "Win32_Media_Speech",
-    "Win32_System_Com", "Win32_System_Ole", "Win32_System_WindowsProgramming", "Win32_UI_Shell"
+    "alloc", "build", "std", "Win32_Foundation", "Win32_Globalization", "Win32_Media_Audio",
+    "Win32_Media_Speech", "Win32_System_Com", "Win32_System_Ole", "Win32_System_SystemServices",
+    "Win32_System_WindowsProgramming", "Win32_UI_Shell"
 ] }
 xml-rs = "0.8.4"
 
