@@ -42,3 +42,4 @@ required-features = ["tokio-all"]
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+targets = ["x86_64-pc-windows-msvc", "i686-pc-windows-msvc"]
