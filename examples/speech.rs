@@ -12,10 +12,16 @@ fn main() {
 
     // Build a speech with a variety of commands.
     let speech = SpeechBuilder::new()
-        .select_and_start_voice(VoiceSelector::new().gender_eq(VoiceGender::Female), None)
+        .select_and_start_voice(
+            Some(VoiceSelector::new().gender_eq(VoiceGender::Female)),
+            None,
+        )
         .start_rate(4)
         .say("The pellet with the poison's in the vessel with the pestle.")
-        .select_and_start_voice(VoiceSelector::new().gender_eq(VoiceGender::Male), None)
+        .select_and_start_voice(
+            Some(VoiceSelector::new().gender_eq(VoiceGender::Male)),
+            None,
+        )
         .say("And the chalice from the palace has the brew that is true.")
         .end_voice()
         .end_rate()

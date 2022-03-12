@@ -71,7 +71,7 @@ impl SpeechBuilder {
         if let Some(name) = voice.name() {
             selector = selector.name_eq(name.to_string_lossy());
         }
-        self.select_and_start_voice(selector, None)
+        self.select_and_start_voice(Some(selector), None)
     }
 
     /// Switches to a voice that matches the specified criteria until the corresponding
@@ -79,14 +79,16 @@ impl SpeechBuilder {
     /// `optional` criteria, see [`installed_voices`](crate::tts::installed_voices).
     pub fn select_and_start_voice(
         &mut self,
-        required: VoiceSelector,
+        required: Option<VoiceSelector>,
         optional: Option<VoiceSelector>,
     ) -> &mut Self {
         let mut event = XmlEvent::start_element("voice");
 
-        let required_expr = required.into_sapi_expr();
-        if !required_expr.is_empty() {
-            event = event.attr("required", &required_expr);
+        let required_expr = required.map(VoiceSelector::into_sapi_expr);
+        if let Some(required_expr) = required_expr.as_ref() {
+            if !required_expr.is_empty() {
+                event = event.attr("required", &required_expr);
+            }
         }
 
         let optional_expr = optional.map(VoiceSelector::into_sapi_expr);
